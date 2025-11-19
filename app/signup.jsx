@@ -53,7 +53,7 @@ const Signup = () => {
     setLoading(true);
 
     try {
-      // Supabase signup with user metadata
+      // Create user with Supabase
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -65,22 +65,35 @@ const Signup = () => {
       });
 
       if (error) {
-        Alert.alert('Signup Failed', error.message);
+        let errorMessage = error.message;
+
+        // Provide helpful error messages
+        if (error.message.includes('User already registered')) {
+          errorMessage = 'An account with this email already exists. Please log in instead.';
+        } else if (error.message.includes('Password should be')) {
+          errorMessage = 'Password must be at least 6 characters long.';
+        } else if (error.message.includes('Invalid email')) {
+          errorMessage = 'Please enter a valid email address.';
+        }
+
+        Alert.alert('Signup Failed', errorMessage);
         return;
       }
 
-      // Success - AuthContext will handle navigation via index.jsx
-      console.log('Signup successful:', data.user.email);
-
-      // Show success message
+      // Success message
       Alert.alert(
-        'Account Created! 🎉',
-        'Welcome to Captea! You can now start exploring.',
-        [{ text: 'OK' }]
+        'Success!',
+        'Account created successfully! You can now log in.',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.replace('/login'),
+          },
+        ]
       );
     } catch (error) {
       console.error('Signup error:', error);
-      Alert.alert('Signup Failed', 'An unexpected error occurred');
+      Alert.alert('Signup Failed', error.message || 'An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
     }

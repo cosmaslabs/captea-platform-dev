@@ -145,13 +145,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: theme.colors.text,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
+    boxShadow: `0 4px 8px ${theme.colors.text}33`,
     elevation: 6,
   },
   avatarText: {

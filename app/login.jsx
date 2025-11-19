@@ -48,7 +48,18 @@ const Login = () => {
       });
 
       if (error) {
-        Alert.alert('Login Failed', error.message);
+        let errorMessage = error.message;
+
+        // Provide helpful error messages
+        if (error.message.includes('Invalid login credentials')) {
+          errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+        } else if (error.message.includes('Email not confirmed')) {
+          errorMessage = 'Please verify your email address before logging in.';
+        } else if (error.message.includes('User not found')) {
+          errorMessage = 'No account found with this email. Please sign up first.';
+        }
+
+        Alert.alert('Login Failed', errorMessage);
         return;
       }
 
@@ -56,7 +67,7 @@ const Login = () => {
       console.log('Login successful:', data.user.email);
     } catch (error) {
       console.error('Login error:', error);
-      Alert.alert('Login Failed', 'An unexpected error occurred');
+      Alert.alert('Login Failed', error.message || 'An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
     }

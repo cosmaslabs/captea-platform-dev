@@ -68,13 +68,7 @@ const styles = StyleSheet.create({
     fontWeight: theme.fonts.bold,
   },
   shadow: {
-    shadowColor: theme.colors.text,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
+    boxShadow: `0 4px 8px ${theme.colors.text}33`,
     elevation: 6, // Android shadow
   },
   pressed: {
