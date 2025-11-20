@@ -5,9 +5,7 @@
  * Native: Uses AsyncStorage (React Native's async storage)
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
-import { Platform } from 'react-native';
 import 'react-native-url-polyfill/auto';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -21,25 +19,48 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 /**
  * Platform-specific storage implementation
- * - Web: Uses localStorage (synchronous browser storage)
- * - Native: Uses AsyncStorage (React Native async storage)
+ * Detects environment and uses appropriate storage
  */
-const supabaseStorage = Platform.OS === 'web'
-  ? {
-      getItem: (key) => {
-        if (typeof localStorage === 'undefined') return null;
+const isWeb = typeof window !== 'undefined' && typeof window.document !== 'undefined';
+
+let supabaseStorage;
+
+if (isWeb) {
+  // Web: Use localStorage directly
+  supabaseStorage = {
+    getItem: (key) => {
+      try {
         return localStorage.getItem(key);
-      },
-      setItem: (key, value) => {
-        if (typeof localStorage === 'undefined') return;
+      } catch (e) {
+        console.warn('localStorage getItem error:', e);
+        return null;
+      }
+    },
+    setItem: (key, value) => {
+      try {
         localStorage.setItem(key, value);
-      },
-      removeItem: (key) => {
-        if (typeof localStorage === 'undefined') return;
+      } catch (e) {
+        console.warn('localStorage setItem error:', e);
+      }
+    },
+    removeItem: (key) => {
+      try {
         localStorage.removeItem(key);
-      },
-    }
-  : AsyncStorage; // Native uses AsyncStorage directly
+      } catch (e) {
+        console.warn('localStorage removeItem error:', e);
+      }
+    },
+  };
+} else {
+  // Native: Import AsyncStorage dynamically
+  try {
+    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+    supabaseStorage = AsyncStorage;
+  } catch (e) {
+    console.error('AsyncStorage not available:', e);
+    supabaseStorage = null;
+  }
+}
 
 /**
  * Supabase client instance
