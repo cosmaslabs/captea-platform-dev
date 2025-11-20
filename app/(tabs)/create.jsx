@@ -6,16 +6,16 @@
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Icon from '../assets/icons';
-import BackButton from '../components/BackButton';
-import Button from '../components/Button';
-import Loading from '../components/Loading';
-import RichTextInput from '../components/RichTextInput';
-import ScreenWrapper from '../components/ScreenWrapper';
-import { theme } from '../constants/theme';
-import { HP, WP } from '../helpers/common';
-import { pickImage, uploadFile } from '../helpers/media';
-import { usePosts } from '../hooks/usePosts';
+import Icon from '../../assets/icons';
+import BackButton from '../../components/BackButton';
+import Button from '../../components/Button';
+import Loading from '../../components/Loading';
+import RichTextInput from '../../components/RichTextInput';
+import ScreenWrapper from '../../components/ScreenWrapper';
+import { theme } from '../../constants/theme';
+import { HP, WP } from '../../helpers/common';
+import { pickImage, uploadFile } from '../../helpers/media';
+import { usePosts } from '../../hooks/usePosts';
 
 const Create = () => {
   const router = useRouter();

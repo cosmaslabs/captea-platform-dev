@@ -6,14 +6,14 @@
 
 import { useRouter } from 'expo-router';
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
-import Icon from '../assets/icons';
-import Loading from '../components/Loading';
-import PostCard from '../components/PostCard';
-import ScreenWrapper from '../components/ScreenWrapper';
-import { theme } from '../constants/theme';
-import { useAuth } from '../contexts/AuthContext';
-import { HP, WP } from '../helpers/common';
-import { usePosts } from '../hooks/usePosts';
+import Icon from '../../assets/icons';
+import Loading from '../../components/Loading';
+import PostCard from '../../components/PostCard';
+import ScreenWrapper from '../../components/ScreenWrapper';
+import { theme } from '../../constants/theme';
+import { useAuth } from '../../contexts/AuthContext';
+import { HP, WP } from '../../helpers/common';
+import { usePosts } from '../../hooks/usePosts';
 
 const Home = () => {
   const router = useRouter();

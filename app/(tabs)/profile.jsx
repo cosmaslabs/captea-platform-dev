@@ -6,12 +6,12 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
-import BackButton from '../components/BackButton';
-import Button from '../components/Button';
-import ScreenWrapper from '../components/ScreenWrapper';
-import { theme } from '../constants/theme';
-import { useAuth } from '../contexts/AuthContext';
-import { HP, WP } from '../helpers/common';
+import BackButton from '../../components/BackButton';
+import Button from '../../components/Button';
+import ScreenWrapper from '../../components/ScreenWrapper';
+import { theme } from '../../constants/theme';
+import { useAuth } from '../../contexts/AuthContext';
+import { HP, WP } from '../../helpers/common';
 
 const Profile = () => {
   const router = useRouter();
