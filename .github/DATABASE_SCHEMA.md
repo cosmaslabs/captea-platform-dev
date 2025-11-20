@@ -342,10 +342,96 @@ $$ language plpgsql security definer;
 
 ---
 
+## 7. Messages & Conversations Tables
+
+```sql
+-- Create messages table
+create table messages (
+  id uuid default gen_random_uuid() primary key,
+  sender_id uuid references auth.users on delete cascade not null,
+  receiver_id uuid references auth.users on delete cascade not null,
+  content text not null,
+  read boolean default false,
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now()
+);
+
+-- Create indexes for better query performance
+create index messages_sender_id_idx on messages (sender_id);
+create index messages_receiver_id_idx on messages (receiver_id);
+create index messages_created_at_idx on messages (created_at desc);
+create index messages_conversation_idx on messages (sender_id, receiver_id, created_at desc);
+
+-- Enable RLS
+alter table messages enable row level security;
+
+-- Policies - users can only see messages they sent or received
+create policy "Users can view their own messages"
+  on messages for select
+  using (auth.uid() = sender_id or auth.uid() = receiver_id);
+
+create policy "Users can insert their own messages"
+  on messages for insert
+  with check (auth.uid() = sender_id);
+
+create policy "Users can update their received messages"
+  on messages for update
+  using (auth.uid() = receiver_id);
+
+-- Enable real-time
+alter publication supabase_realtime add table messages;
+
+-- Create conversations view for chat list
+create or replace view conversations as
+select distinct on (conversation_id)
+  conversation_id,
+  user_id,
+  participant_id,
+  last_message,
+  last_message_time,
+  unread_count
+from (
+  select
+    case
+      when m.sender_id < m.receiver_id
+      then m.sender_id || '-' || m.receiver_id
+      else m.receiver_id || '-' || m.sender_id
+    end as conversation_id,
+    case
+      when m.sender_id = auth.uid() then m.sender_id
+      else m.receiver_id
+    end as user_id,
+    case
+      when m.sender_id = auth.uid() then m.receiver_id
+      else m.sender_id
+    end as participant_id,
+    m.content as last_message,
+    m.created_at as last_message_time,
+    (
+      select count(*)
+      from messages m2
+      where m2.receiver_id = auth.uid()
+      and m2.sender_id = (
+        case
+          when m.sender_id = auth.uid() then m.receiver_id
+          else m.sender_id
+        end
+      )
+      and m2.read = false
+    ) as unread_count
+  from messages m
+  where m.sender_id = auth.uid() or m.receiver_id = auth.uid()
+  order by m.created_at desc
+) as conversation_data
+order by conversation_id, last_message_time desc;
+```
+
+---
+
 ## Setup Instructions
 
 1. **Open Supabase Dashboard** → SQL Editor
-2. **Execute each section** in order (Profiles → Posts → Likes → Comments → Storage → Functions)
+2. **Execute each section** in order (Profiles → Posts → Likes → Comments → Messages → Storage → Functions)
 3. **Verify tables** in Table Editor
 4. **Enable Real-time** in Database → Replication (if not auto-enabled)
 5. **Test RLS policies** by creating test data

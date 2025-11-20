@@ -42,6 +42,23 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
+        name="messages"
+        options={{
+          title: 'Messages',
+          tabBarIcon: ({ color, focused }) => (
+            <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
+              <Icon
+                name="MessageCircle"
+                size={24}
+                color={focused ? theme.colors.primary : color}
+                strokeWidth={focused ? 2.5 : 1.8}
+              />
+            </View>
+          ),
+        }}
+      />
+
+      <Tabs.Screen
         name="create"
         options={{
           title: 'Create',
