@@ -4,6 +4,7 @@
  * Phase 3: Core Social Features
  */
 
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
@@ -11,6 +12,7 @@ import Icon from '../../assets/icons';
 import Loading from '../../components/Loading';
 import PostCard from '../../components/PostCard';
 import ScreenWrapper from '../../components/ScreenWrapper';
+import SkeletonLoader from '../../components/SkeletonLoader';
 import { theme } from '../../constants/theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { HP, WP } from '../../helpers/common';
@@ -22,6 +24,7 @@ const Home = () => {
   const { posts, loading, refreshing, hasMore, loadMore, refresh, toggleLike, sharePost, updatePost, deletePost } = usePosts();
 
   const handleLike = async (post) => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const result = await toggleLike(post);
     if (!result.success) {
       Alert.alert('Error', 'Failed to like post. Please try again.');
@@ -29,6 +32,7 @@ const Home = () => {
   };
 
   const handleComment = (post) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push(`/post/${post.id}`);
   };
 
@@ -159,7 +163,9 @@ const Home = () => {
   );
 
   const renderEmpty = () => {
-    if (loading) return null;
+    if (loading) {
+      return <SkeletonLoader variant="post" count={3} />;
+    }
 
     return (
       <View style={styles.emptyContainer}>
@@ -185,10 +191,21 @@ const Home = () => {
     );
   };
 
+  const handleRefresh = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    refresh();
+  };
+
+  const handleFabPress = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    handleCreatePost();
+  };
+
   if (loading && posts.length === 0) {
     return (
-      <ScreenWrapper bg={theme.colors.background}>
-        <Loading />
+      <ScreenWrapper bg={theme.colors.backgroundSecondary}>
+        {renderHeader()}
+        <SkeletonLoader variant="post" count={3} />
       </ScreenWrapper>
     );
   }
@@ -208,8 +225,10 @@ const Home = () => {
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
-              onRefresh={refresh}
+              onRefresh={handleRefresh}
               tintColor={theme.colors.primary}
+              colors={[theme.colors.primary]}
+              progressBackgroundColor={theme.colors.surface}
             />
           }
           onEndReached={loadMore}
@@ -217,9 +236,9 @@ const Home = () => {
           showsVerticalScrollIndicator={false}
         />
 
-        {/* Floating Create Button */}
-        <Pressable style={styles.fab} onPress={handleCreatePost}>
-          <Icon name="Plus" size={28} color={theme.colors.textWhite} strokeWidth={2.5} />
+        {/* Floating Create Button with Haptic */}
+        <Pressable style={styles.fab} onPress={handleFabPress}>
+          <Icon name="Plus" size={28} color={theme.colors.onPrimary} strokeWidth={2.5} />
         </Pressable>
       </View>
     </ScreenWrapper>

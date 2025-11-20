@@ -14,13 +14,22 @@
  * @param {string} currentUserId - Current user ID to check ownership
  */
 
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, {
+    useAnimatedStyle,
+    useSharedValue,
+    withSequence,
+    withSpring
+} from 'react-native-reanimated';
 import Icon from '../assets/icons';
 import { theme } from '../constants/theme';
 import { HP, WP } from '../helpers/common';
 import VideoPlayer from './VideoPlayer';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const PostCard = ({
   post,
@@ -35,10 +44,20 @@ const PostCard = ({
 }) => {
   const router = useRouter();
   const [menuVisible, setMenuVisible] = useState(false);
+  const [isLiked, setIsLiked] = useState(post.user_liked);
 
   const isOwner = currentUserId && post.user_id === currentUserId;
 
+  // Animation values
+  const scale = useSharedValue(1);
+  const likeScale = useSharedValue(1);
+
+  useEffect(() => {
+    setIsLiked(post.user_liked);
+  }, [post.user_liked]);
+
   const handlePress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (onPress) {
       onPress(post);
     } else {
@@ -46,11 +65,21 @@ const PostCard = ({
     }
   };
 
-  const handleLike = () => {
+  const handleLike = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    // Animate heart
+    likeScale.value = withSequence(
+      withSpring(1.3, { damping: 10, stiffness: 200 }),
+      withSpring(1, { damping: 10, stiffness: 200 })
+    );
+
+    setIsLiked(!isLiked);
     if (onLike) onLike(post);
   };
 
   const handleComment = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (onComment) {
       onComment(post);
     } else {
@@ -86,8 +115,14 @@ const PostCard = ({
   };
 
   const toggleMenu = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setMenuVisible(!menuVisible);
   };
+
+  // Animated styles
+  const likeAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: likeScale.value }],
+  }));
 
   // Format timestamp
   const getTimeAgo = (timestamp) => {
@@ -198,20 +233,23 @@ const PostCard = ({
       {/* Actions */}
       {showActions && (
         <View style={styles.actions}>
-          {/* Like */}
+          {/* Like with Animation */}
           <Pressable
             style={styles.actionButton}
             onPress={handleLike}
           >
-            <Icon
-              name="Heart"
-              size={22}
-              color={post.user_liked ? theme.colors.like : theme.colors.textLight}
-              strokeWidth={post.user_liked ? 2.5 : 1.6}
-            />
+            <Animated.View style={likeAnimatedStyle}>
+              <Icon
+                name="Heart"
+                size={22}
+                color={isLiked ? theme.colors.likeActive : theme.colors.textSecondary}
+                strokeWidth={isLiked ? 2.5 : 1.8}
+                fill={isLiked ? theme.colors.likeActive : 'transparent'}
+              />
+            </Animated.View>
             <Text style={[
               styles.actionText,
-              post.user_liked && styles.actionTextActive
+              isLiked && styles.actionTextActive
             ]}>
               {post.likes_count || 0}
             </Text>
