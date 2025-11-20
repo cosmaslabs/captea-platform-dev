@@ -4,40 +4,61 @@
  * Real-time updates via Supabase subscriptions
  */
 
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import Icon from '../../assets/icons';
+import Loading from '../../components/Loading';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import { theme } from '../../constants/theme';
 import { HP, WP } from '../../helpers/common';
+import { useNotifications } from '../../hooks/useNotifications';
 
 const Notifications = () => {
-  // Placeholder data - will be replaced with real notifications
-  const notifications = [
-    {
-      id: '1',
-      type: 'like',
-      user: 'John Doe',
-      message: 'liked your post',
-      time: '2 hours ago',
-      read: false,
-    },
-    {
-      id: '2',
-      type: 'comment',
-      user: 'Jane Smith',
-      message: 'commented on your post',
-      time: '5 hours ago',
-      read: false,
-    },
-    {
-      id: '3',
-      type: 'follow',
-      user: 'Mike Johnson',
-      message: 'started following you',
-      time: '1 day ago',
-      read: true,
-    },
-  ];
+  const router = useRouter();
+  const {
+    notifications,
+    loading,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    getTimeAgo,
+  } = useNotifications();
+
+  const getNotificationMessage = (notif) => {
+    switch (notif.type) {
+      case 'like':
+        return 'liked your post';
+      case 'comment':
+        return 'commented on your post';
+      case 'follow':
+        return 'started following you';
+      default:
+        return '';
+    }
+  };
+
+  const handleNotificationPress = (notif) => {
+    // Mark as read
+    if (!notif.read) {
+      markAsRead(notif.id);
+    }
+
+    // Navigate to post if applicable
+    if (notif.post_id) {
+      router.push(`/post/${notif.post_id}`);
+    }
+  };
+
+  const getAvatar = (notif) => {
+    if (notif.sender?.avatar_url) {
+      return notif.sender.avatar_url;
+    }
+    return null;
+  };
+
+  const getUserName = (notif) => {
+    return notif.sender?.name || 'Someone';
+  };
 
   const getNotificationIcon = (type) => {
     switch (type) {
@@ -52,34 +73,47 @@ const Notifications = () => {
     }
   };
 
-  const renderNotification = ({ item }) => (
-    <Pressable
-      style={[styles.notificationItem, !item.read && styles.unread]}
-      onPress={() => {
-        // Navigate to relevant post/profile
-        console.log('Navigate to notification:', item.id);
-      }}
-    >
-      <View style={styles.iconContainer}>
-        <Icon
-          name={getNotificationIcon(item.type)}
-          size={24}
-          color={theme.colors.primary}
-        />
-      </View>
+  const renderNotification = ({ item }) => {
+    const avatar = getAvatar(item);
+    const userName = getUserName(item);
+    const message = getNotificationMessage(item);
+    const timeAgo = getTimeAgo(item.created_at);
 
-      <View style={styles.content}>
-        <Text style={styles.message}>
-          <Text style={styles.user}>{item.user}</Text>
-          {' '}
-          {item.message}
-        </Text>
-        <Text style={styles.time}>{item.time}</Text>
-      </View>
+    return (
+      <Pressable
+        style={[styles.notificationItem, !item.read && styles.unread]}
+        onPress={() => handleNotificationPress(item)}
+      >
+        {/* Avatar or Icon */}
+        <View style={styles.avatarContainer}>
+          {avatar ? (
+            <Image source={{ uri: avatar }} style={styles.avatar} />
+          ) : (
+            <View style={styles.iconContainer}>
+              <Icon
+                name={getNotificationIcon(item.type)}
+                size={24}
+                color={theme.colors.primary}
+              />
+            </View>
+          )}
+        </View>
 
-      {!item.read && <View style={styles.unreadDot} />}
-    </Pressable>
-  );
+        {/* Content */}
+        <View style={styles.content}>
+          <Text style={styles.message}>
+            <Text style={styles.user}>{userName}</Text>
+            {' '}
+            {message}
+          </Text>
+          <Text style={styles.time}>{timeAgo}</Text>
+        </View>
+
+        {/* Unread Indicator */}
+        {!item.read && <View style={styles.unreadDot} />}
+      </Pressable>
+    );
+  };
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
@@ -91,14 +125,29 @@ const Notifications = () => {
     </View>
   );
 
+  if (loading) {
+    return (
+      <ScreenWrapper bg={theme.colors.background}>
+        <Loading />
+      </ScreenWrapper>
+    );
+  }
+
   return (
     <ScreenWrapper bg={theme.colors.background}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Notifications</Text>
-          {notifications.length > 0 && (
-            <Pressable onPress={() => console.log('Mark all as read')}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.title}>Notifications</Text>
+            {unreadCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{unreadCount}</Text>
+              </View>
+            )}
+          </View>
+          {unreadCount > 0 && (
+            <Pressable onPress={markAllAsRead}>
               <Text style={styles.markAllRead}>Mark all read</Text>
             </Pressable>
           )}
@@ -132,10 +181,29 @@ const styles = StyleSheet.create({
     paddingVertical: HP(2),
     paddingHorizontal: WP(1),
   },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: WP(2),
+  },
   title: {
     fontSize: HP(3),
     fontWeight: theme.fonts.bold,
     color: theme.colors.text,
+  },
+  badge: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: HP(1.5),
+    minWidth: HP(2.5),
+    height: HP(2.5),
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: WP(1.5),
+  },
+  badgeText: {
+    fontSize: HP(1.3),
+    fontWeight: theme.fonts.bold,
+    color: theme.colors.textWhite,
   },
   markAllRead: {
     fontSize: HP(1.6),
@@ -154,10 +222,19 @@ const styles = StyleSheet.create({
   unread: {
     backgroundColor: theme.colors.primaryLight || '#E6F7FF',
   },
+  avatarContainer: {
+    width: HP(5.5),
+    height: HP(5.5),
+  },
+  avatar: {
+    width: HP(5.5),
+    height: HP(5.5),
+    borderRadius: HP(2.75),
+  },
   iconContainer: {
-    width: HP(5),
-    height: HP(5),
-    borderRadius: HP(2.5),
+    width: HP(5.5),
+    height: HP(5.5),
+    borderRadius: HP(2.75),
     backgroundColor: theme.colors.primaryLight || '#E6F7FF',
     justifyContent: 'center',
     alignItems: 'center',
