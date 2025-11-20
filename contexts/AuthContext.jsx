@@ -31,6 +31,8 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let subscription = null;
+
     // Check for existing session on mount
     const checkSession = async () => {
       try {
@@ -38,6 +40,7 @@ export const AuthProvider = ({ children }) => {
 
         if (error) {
           console.error('Session check error:', error.message);
+          // Don't throw - just continue without session
         }
 
         if (existingSession) {
@@ -46,27 +49,43 @@ export const AuthProvider = ({ children }) => {
         }
       } catch (error) {
         console.error('Session check failed:', error);
+        // Continue without session - app should still work
       } finally {
         setLoading(false);
       }
     };
 
+    // Initialize session check
     checkSession();
 
     // Listen for auth state changes (login, logout, token refresh)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        console.log('Auth state changed:', event);
+    try {
+      const authListener = supabase.auth.onAuthStateChange(
+        async (event, currentSession) => {
+          console.log('Auth state changed:', event);
 
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        setLoading(false);
-      }
-    );
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+
+          // Ensure loading is false after auth state changes
+          if (loading) {
+            setLoading(false);
+          }
+        }
+      );
+
+      subscription = authListener.data.subscription;
+    } catch (error) {
+      console.error('Failed to set up auth listener:', error);
+      // Continue without listener - app should still work
+      setLoading(false);
+    }
 
     // Cleanup subscription on unmount
     return () => {
-      subscription.unsubscribe();
+      if (subscription) {
+        subscription.unsubscribe();
+      }
     };
   }, []);
 
