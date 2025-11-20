@@ -5,10 +5,18 @@
  */
 
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
+import { useEffect } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 import Icon from '../../assets/icons';
+import EmptyState from '../../components/EmptyState';
 import Loading from '../../components/Loading';
 import PostCard from '../../components/PostCard';
 import ScreenWrapper from '../../components/ScreenWrapper';
@@ -18,10 +26,20 @@ import { useAuth } from '../../contexts/AuthContext';
 import { HP, WP } from '../../helpers/common';
 import { usePosts } from '../../hooks/usePosts';
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 const Home = () => {
   const router = useRouter();
   const { user } = useAuth();
   const { posts, loading, refreshing, hasMore, loadMore, refresh, toggleLike, sharePost, updatePost, deletePost } = usePosts();
+
+  // FAB animation
+  const fabScale = useSharedValue(1);
+
+  useEffect(() => {
+    // Entrance animation for FAB
+    fabScale.value = withSpring(1, { damping: 12, stiffness: 100 });
+  }, []);
 
   const handleLike = async (post) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -168,16 +186,14 @@ const Home = () => {
     }
 
     return (
-      <View style={styles.emptyContainer}>
-        <Icon name="Image" size={64} color={theme.colors.textLight} />
-        <Text style={styles.emptyTitle}>No posts yet</Text>
-        <Text style={styles.emptyText}>
-          Be the first to share something!
-        </Text>
-        <Pressable style={styles.emptyButton} onPress={handleCreatePost}>
-          <Text style={styles.emptyButtonText}>Create Post</Text>
-        </Pressable>
-      </View>
+      <EmptyState
+        icon="Image"
+        title="No posts yet"
+        message="Be the first to share something amazing with the community!"
+        actionTitle="Create Post"
+        onAction={handleCreatePost}
+        variant="default"
+      />
     );
   };
 
@@ -198,8 +214,16 @@ const Home = () => {
 
   const handleFabPress = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    fabScale.value = withSpring(0.9, { damping: 10 });
+    setTimeout(() => {
+      fabScale.value = withSpring(1, { damping: 10 });
+    }, 100);
     handleCreatePost();
   };
+
+  const fabAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: fabScale.value }],
+  }));
 
   if (loading && posts.length === 0) {
     return (
@@ -236,10 +260,17 @@ const Home = () => {
           showsVerticalScrollIndicator={false}
         />
 
-        {/* Floating Create Button with Haptic */}
-        <Pressable style={styles.fab} onPress={handleFabPress}>
-          <Icon name="Plus" size={28} color={theme.colors.onPrimary} strokeWidth={2.5} />
-        </Pressable>
+        {/* Enhanced Floating Action Button */}
+        <AnimatedPressable style={[styles.fab, fabAnimatedStyle]} onPress={handleFabPress}>
+          <LinearGradient
+            colors={theme.gradients.primary}
+            style={styles.fabGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <Icon name="Plus" size={28} color={theme.colors.onPrimary} strokeWidth={3} />
+          </LinearGradient>
+        </AnimatedPressable>
       </View>
     </ScreenWrapper>
   );
@@ -294,40 +325,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   listContent: {
-    paddingTop: HP(1.5),
+    paddingTop: HP(0.5),
     paddingBottom: HP(12),
-    gap: HP(1.5),
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: HP(12),
-    paddingHorizontal: WP(10),
-  },
-  emptyTitle: {
-    fontSize: HP(2.4),
-    fontWeight: theme.fonts.bold,
-    color: theme.colors.text,
-    marginTop: HP(2),
-    textAlign: 'center',
-  },
-  emptyText: {
-    ...theme.typography.bodyMedium,
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
-    marginTop: HP(1),
-  },
-  emptyButton: {
-    marginTop: HP(3),
-    paddingHorizontal: WP(10),
-    paddingVertical: HP(1.8),
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.full,
-    ...theme.shadows.level2,
-  },
-  emptyButtonText: {
-    ...theme.typography.labelLarge,
-    color: theme.colors.onPrimary,
   },
   footerLoader: {
     paddingVertical: HP(3),
@@ -337,13 +336,17 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: HP(10),
     right: WP(5),
-    width: HP(7),
-    height: HP(7),
+    width: HP(7.5),
+    height: HP(7.5),
     borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.primary,
+    ...theme.shadows.level5,
+  },
+  fabGradient: {
+    width: '100%',
+    height: '100%',
+    borderRadius: theme.radius.full,
     justifyContent: 'center',
     alignItems: 'center',
-    ...theme.shadows.level4,
   },
 });
 

@@ -199,4 +199,58 @@ export const theme = {
     labelMedium: { fontSize: 12, lineHeight: 16, fontWeight: '600' },
     labelSmall: { fontSize: 11, lineHeight: 16, fontWeight: '600' },
   },
+
+  // Gradient presets for modern UI
+  gradients: {
+    primary: ['#FF6719', '#FF8547'],
+    secondary: ['#7D5260', '#A67C89'],
+    warm: ['#FF6719', '#FCAF45'],
+    cool: ['#006874', '#4F9AA3'],
+    instagram: ['#833AB4', '#E1306C', '#FD1D1D', '#FCAF45'],
+    sunset: ['#FF6719', '#FF8547', '#FCAF45'],
+    ocean: ['#006874', '#00B4D8', '#4F9AA3'],
+    rose: ['#7D5260', '#E1306C', '#FFD9E3'],
+    success: ['#006E26', '#95F7B4'],
+    error: ['#BA1A1A', '#FFDAD6'],
+    dark: ['#1C1B1E', '#49454E'],
+    light: ['#FFFFFF', '#F5F5F5'],
+  },
+
+  // Animation timings
+  animation: {
+    fast: 150,
+    normal: 250,
+    slow: 350,
+    slower: 500,
+  },
+
+  // Spring configs for reanimated
+  spring: {
+    gentle: { damping: 20, stiffness: 90 },
+    snappy: { damping: 15, stiffness: 150 },
+    bouncy: { damping: 10, stiffness: 200 },
+    slow: { damping: 25, stiffness: 60 },
+  },
+
+  // Glassmorphism effect
+  glass: {
+    light: {
+      backgroundColor: 'rgba(255, 255, 255, 0.7)',
+      backdropFilter: 'blur(10px)',
+      borderWidth: 1,
+      borderColor: 'rgba(255, 255, 255, 0.3)',
+    },
+    dark: {
+      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+      backdropFilter: 'blur(10px)',
+      borderWidth: 1,
+      borderColor: 'rgba(255, 255, 255, 0.1)',
+    },
+    primary: {
+      backgroundColor: 'rgba(255, 103, 25, 0.2)',
+      backdropFilter: 'blur(10px)',
+      borderWidth: 1,
+      borderColor: 'rgba(255, 103, 25, 0.3)',
+    },
+  },
 };
