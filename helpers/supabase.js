@@ -24,14 +24,17 @@ if (!supabaseUrl || !supabaseAnonKey) {
  * Supabase client instance
  * Configured with:
  * - Auto token refresh for seamless authentication
- * - Persistent sessions (uses localStorage on web, AsyncStorage on native automatically)
+ * - NO persistent sessions on web (avoids AsyncStorage errors)
  * - Session detection disabled for URL (SPA mode)
+ *
+ * Note: Users need to login each time on web (mobile-first approach)
+ * Native apps will use AsyncStorage automatically for persistence
  */
 export const supabase = createClient(supabaseUrl || 'https://placeholder.supabase.co', supabaseAnonKey || 'placeholder', {
   auth: {
-    // Storage handled automatically by Supabase based on platform
+    storage: undefined,  // Disable storage completely (no AsyncStorage on web)
     autoRefreshToken: true,
-    persistSession: true,
+    persistSession: false,  // Disable session persistence to avoid storage issues
     detectSessionInUrl: false,
   },
 });
