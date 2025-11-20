@@ -1,12 +1,12 @@
 /**
  * Supabase Client Configuration
- * Initializes Supabase client with web-compatible storage for session persistence
- * Enables auto-refresh and persistent sessions
+ * Initializes Supabase client with platform-specific storage
+ * Web: Uses default localStorage
+ * Native: Uses AsyncStorage (handled by Supabase automatically)
  */
 
 import { createClient } from '@supabase/supabase-js';
 import 'react-native-url-polyfill/auto';
-import { storage } from './webStorage';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
@@ -23,13 +23,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
 /**
  * Supabase client instance
  * Configured with:
- * - Web-compatible storage (AsyncStorage on native, localStorage on web)
  * - Auto token refresh for seamless authentication
- * - Persistent sessions
+ * - Persistent sessions (uses localStorage on web, AsyncStorage on native automatically)
+ * - Session detection disabled for URL (SPA mode)
  */
 export const supabase = createClient(supabaseUrl || 'https://placeholder.supabase.co', supabaseAnonKey || 'placeholder', {
   auth: {
-    storage: storage,
+    // Storage handled automatically by Supabase based on platform
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
