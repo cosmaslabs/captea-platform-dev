@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "captea-platform-dev",
+    "name": "Captea Platform",
     "slug": "captea-platform-dev",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,21 +13,53 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.cosmaslabs.captea"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.cosmaslabs.captea",
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "static"
     },
     "scheme": "captea",
     "plugins": [
-      "expo-router"
-    ]
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Captea to access your photos to share posts.",
+          "cameraPermission": "Allow Captea to access your camera to take photos."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "58e0f865-932a-48b2-a91b-7500b705a297"
+      }
+    },
+    "owner": "cosmaslabs"
   }
 }
