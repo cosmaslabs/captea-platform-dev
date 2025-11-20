@@ -59,6 +59,8 @@ begin
 end;
 $$ language plpgsql security definer;
 
+-- Drop existing trigger if it exists, then create new one
+drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
@@ -256,19 +258,24 @@ alter publication supabase_realtime add table comments;
 
 ### 🔹 Section 6: Storage Buckets
 
-```sql
--- Create storage buckets
-insert into storage.buckets (id, name, public)
-values
-  ('avatars', 'avatars', true),
-  ('posts', 'posts', true)
-on conflict (id) do nothing;
+**⚠️ IMPORTANT: Create buckets manually in Supabase Dashboard first!**
 
+1. Go to **Storage** in left sidebar
+2. Click **New bucket**
+3. Name: `avatars` → Check **Public bucket** → Create
+4. Click **New bucket** again
+5. Name: `posts` → Check **Public bucket** → Create
+
+**Then run this SQL for storage policies:**
+
+```sql
 -- Storage policies for avatars
+drop policy if exists "Avatar images are publicly accessible" on storage.objects;
 create policy "Avatar images are publicly accessible"
   on storage.objects for select
   using (bucket_id = 'avatars');
 
+drop policy if exists "Authenticated users can upload avatars" on storage.objects;
 create policy "Authenticated users can upload avatars"
   on storage.objects for insert
   with check (
@@ -276,6 +283,7 @@ create policy "Authenticated users can upload avatars"
     and auth.uid()::text = (storage.foldername(name))[1]
   );
 
+drop policy if exists "Users can update their own avatars" on storage.objects;
 create policy "Users can update their own avatars"
   on storage.objects for update
   using (
@@ -283,6 +291,7 @@ create policy "Users can update their own avatars"
     and auth.uid()::text = (storage.foldername(name))[1]
   );
 
+drop policy if exists "Users can delete their own avatars" on storage.objects;
 create policy "Users can delete their own avatars"
   on storage.objects for delete
   using (
@@ -291,10 +300,12 @@ create policy "Users can delete their own avatars"
   );
 
 -- Storage policies for posts
+drop policy if exists "Post images are publicly accessible" on storage.objects;
 create policy "Post images are publicly accessible"
   on storage.objects for select
   using (bucket_id = 'posts');
 
+drop policy if exists "Authenticated users can upload post media" on storage.objects;
 create policy "Authenticated users can upload post media"
   on storage.objects for insert
   with check (
@@ -302,6 +313,7 @@ create policy "Authenticated users can upload post media"
     and auth.uid()::text = (storage.foldername(name))[1]
   );
 
+drop policy if exists "Users can delete their own post media" on storage.objects;
 create policy "Users can delete their own post media"
   on storage.objects for delete
   using (
@@ -348,12 +360,21 @@ where pubname = 'supabase_realtime';
 
 ## Step 4: Insert Test Data
 
-```sql
--- Insert test post (replace with your actual user ID)
-insert into posts (user_id, content)
-values (auth.uid(), 'Hello Captea! 🎉 This is my first post on the platform. Excited to connect with everyone!');
+**First, get your user ID:**
 
--- Check it worked
+```sql
+-- Get your user ID from profiles table
+select id, name, email from profiles;
+```
+
+**Copy your `id` (UUID), then insert test post:**
+
+```sql
+-- Replace 'YOUR-USER-ID-HERE' with the actual UUID from above
+insert into posts (user_id, content)
+values ('YOUR-USER-ID-HERE', 'Hello Captea! 🎉 This is my first post on the platform. Excited to connect with everyone!');
+
+-- Verify it worked
 select
   p.*,
   pr.name as user_name,
@@ -363,6 +384,8 @@ join profiles pr on p.user_id = pr.id
 order by p.created_at desc
 limit 5;
 ```
+
+**Expected result:** You should see your test post with user details!
 
 ---
 

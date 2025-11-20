@@ -29,6 +29,9 @@ const Signup = () => {
     const email = emailRef.current.trim();
     const password = passwordRef.current;
 
+    // Debug: Log values
+    console.log('Signup attempt:', { name, email, password: '***' });
+
     // Validation
     if (!name || !email || !password) {
       Alert.alert('Signup Failed', 'Please fill all fields');
@@ -80,17 +83,9 @@ const Signup = () => {
         return;
       }
 
-      // Success message
-      Alert.alert(
-        'Success!',
-        'Account created successfully! You can now log in.',
-        [
-          {
-            text: 'OK',
-            onPress: () => router.replace('/login'),
-          },
-        ]
-      );
+      // Success - redirect to home
+      console.log('Signup successful:', data.user?.email);
+      // AuthContext will handle navigation via index.jsx automatically
     } catch (error) {
       console.error('Signup error:', error);
       Alert.alert('Signup Failed', error.message || 'An unexpected error occurred. Please try again.');
