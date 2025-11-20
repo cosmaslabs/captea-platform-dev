@@ -5,7 +5,7 @@
 
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Dimensions, FlatList, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Icon from '../../assets/icons';
 import Button from '../../components/Button';
 import Loading from '../../components/Loading';
@@ -15,6 +15,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { HP, WP } from '../../helpers/common';
 import { pickImage, uploadFile } from '../../helpers/media';
 import { supabase } from '../../helpers/supabase';
+
+const { width } = Dimensions.get('window');
+const GRID_SPACING = WP(1);
+const NUM_COLUMNS = 3;
+const GRID_ITEM_SIZE = (width - WP(10) - (GRID_SPACING * (NUM_COLUMNS + 1))) / NUM_COLUMNS;
 
 const Profile = () => {
   const router = useRouter();
@@ -26,6 +31,11 @@ const Profile = () => {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Posts state
+  const [userPosts, setUserPosts] = useState([]);
+  const [postsLoading, setPostsLoading] = useState(false);
+  const [postsCount, setPostsCount] = useState(0);
+
   // Edit form refs
   const nameRef = useRef(profile?.name || '');
   const bioRef = useRef(profile?.bio || '');
@@ -34,7 +44,42 @@ const Profile = () => {
   useEffect(() => {
     if (user) {
       fetchProfile();
+      fetchUserPosts();
     }
+  }, [user]);
+
+  // Real-time subscription for user posts
+  useEffect(() => {
+    if (!user) return;
+
+    const subscription = supabase
+      .channel('user-posts')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'posts',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            fetchUserPosts();
+          } else if (payload.eventType === 'DELETE') {
+            setUserPosts(prev => prev.filter(p => p.id !== payload.old.id));
+            setPostsCount(prev => prev - 1);
+          } else if (payload.eventType === 'UPDATE') {
+            setUserPosts(prev =>
+              prev.map(p => (p.id === payload.new.id ? { ...p, ...payload.new } : p))
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [user]);
 
   const fetchProfile = async () => {
@@ -54,6 +99,35 @@ const Profile = () => {
       console.error('Fetch profile error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserPosts = async () => {
+    try {
+      setPostsLoading(true);
+
+      // Fetch posts count
+      const { count, error: countError } = await supabase
+        .from('posts')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      if (countError) throw countError;
+      setPostsCount(count || 0);
+
+      // Fetch posts with details
+      const { data, error } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setUserPosts(data || []);
+    } catch (error) {
+      console.error('Fetch user posts error:', error);
+    } finally {
+      setPostsLoading(false);
     }
   };
 
@@ -115,6 +189,56 @@ const Profile = () => {
       setUploading(false);
     }
   };
+
+  const handlePostPress = (post) => {
+    router.push(`/post/${post.id}`);
+  };
+
+  const renderPostItem = ({ item }) => {
+    return (
+      <Pressable
+        style={styles.gridItem}
+        onPress={() => handlePostPress(item)}
+      >
+        {item.image_url ? (
+          <Image source={{ uri: item.image_url }} style={styles.gridImage} />
+        ) : item.video_url ? (
+          <View style={styles.gridImage}>
+            <View style={styles.videoOverlay}>
+              <Icon name="Video" size={32} color={theme.colors.textWhite} strokeWidth={2} />
+            </View>
+          </View>
+        ) : (
+          <View style={[styles.gridImage, styles.textPostGrid]}>
+            <Text style={styles.textPostContent} numberOfLines={3}>
+              {item.content}
+            </Text>
+          </View>
+        )}
+        {/* Post stats overlay */}
+        <View style={styles.gridStats}>
+          <View style={styles.gridStat}>
+            <Icon name="Heart" size={14} color={theme.colors.textWhite} fill={theme.colors.textWhite} />
+            <Text style={styles.gridStatText}>{item.likes_count || 0}</Text>
+          </View>
+          <View style={styles.gridStat}>
+            <Icon name="Comment" size={14} color={theme.colors.textWhite} />
+            <Text style={styles.gridStatText}>{item.comments_count || 0}</Text>
+          </View>
+        </View>
+      </Pressable>
+    );
+  };
+
+  const renderEmptyPosts = () => (
+    <View style={styles.emptyPosts}>
+      <Icon name="Image" size={48} color={theme.colors.textLight} />
+      <Text style={styles.emptyText}>No posts yet</Text>
+      <Text style={styles.emptySubtext}>
+        Your posts will appear here
+      </Text>
+    </View>
+  );
 
   const handleLogout = async () => {
     Alert.alert(
@@ -184,10 +308,10 @@ const Profile = () => {
               )}
             </View>
 
-            {/* Stats - Placeholder */}
+            {/* Stats */}
             <View style={styles.statsContainer}>
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>0</Text>
+                <Text style={styles.statValue}>{postsCount}</Text>
                 <Text style={styles.statLabel}>Posts</Text>
               </View>
               <View style={styles.statDivider} />
@@ -202,16 +326,24 @@ const Profile = () => {
               </View>
             </View>
 
-            {/* Placeholder for posts grid */}
+            {/* Posts Grid */}
             <View style={styles.postsSection}>
               <Text style={styles.sectionTitle}>My Posts</Text>
-              <View style={styles.emptyPosts}>
-                <Icon name="Image" size={48} color={theme.colors.textLight} />
-                <Text style={styles.emptyText}>No posts yet</Text>
-                <Text style={styles.emptySubtext}>
-                  Your posts will appear here
-                </Text>
-              </View>
+              {postsLoading ? (
+                <Loading />
+              ) : userPosts.length === 0 ? (
+                renderEmptyPosts()
+              ) : (
+                <FlatList
+                  data={userPosts}
+                  renderItem={renderPostItem}
+                  keyExtractor={(item) => item.id}
+                  numColumns={NUM_COLUMNS}
+                  scrollEnabled={false}
+                  columnWrapperStyle={styles.gridRow}
+                  contentContainerStyle={styles.gridContainer}
+                />
+              )}
             </View>
 
             {/* Logout Button */}
@@ -407,6 +539,68 @@ const styles = StyleSheet.create({
     fontWeight: theme.fonts.bold,
     color: theme.colors.text,
     marginBottom: HP(1.5),
+  },
+  gridContainer: {
+    paddingTop: HP(1),
+  },
+  gridRow: {
+    justifyContent: 'flex-start',
+    gap: GRID_SPACING,
+    marginBottom: GRID_SPACING,
+  },
+  gridItem: {
+    width: GRID_ITEM_SIZE,
+    height: GRID_ITEM_SIZE,
+    borderRadius: theme.radius.md,
+    overflow: 'hidden',
+    backgroundColor: theme.colors.border,
+    position: 'relative',
+  },
+  gridImage: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: theme.colors.background,
+  },
+  textPostGrid: {
+    backgroundColor: theme.colors.primary + '20',
+    padding: WP(2),
+    justifyContent: 'center',
+  },
+  textPostContent: {
+    fontSize: HP(1.4),
+    color: theme.colors.text,
+    textAlign: 'center',
+  },
+  videoOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  gridStats: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: HP(0.5),
+    paddingHorizontal: WP(2),
+  },
+  gridStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  gridStatText: {
+    fontSize: HP(1.2),
+    color: theme.colors.textWhite,
+    fontWeight: theme.fonts.semibold,
   },
   emptyPosts: {
     alignItems: 'center',

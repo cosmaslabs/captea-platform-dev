@@ -342,6 +342,44 @@ const Icon = ({
           </Svg>
         );
 
+      case 'Play':
+        return (
+          <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+            <Polygon
+              points="5 3 19 12 5 21 5 3"
+              stroke={color}
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill={color}
+            />
+          </Svg>
+        );
+
+      case 'Pause':
+        return (
+          <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+            <Rect
+              x="6"
+              y="4"
+              width="4"
+              height="16"
+              stroke={color}
+              strokeWidth={strokeWidth}
+              fill={color}
+            />
+            <Rect
+              x="14"
+              y="4"
+              width="4"
+              height="16"
+              stroke={color}
+              strokeWidth={strokeWidth}
+              fill={color}
+            />
+          </Svg>
+        );
+
       case 'Camera':
         return (
           <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">

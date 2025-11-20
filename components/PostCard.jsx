@@ -7,25 +7,36 @@
  * @param {function} onLike - Callback when like button pressed
  * @param {function} onComment - Callback when comment button pressed
  * @param {function} onShare - Callback when share button pressed
+ * @param {function} onEdit - Callback when edit button pressed
+ * @param {function} onDelete - Callback when delete button pressed
  * @param {function} onPress - Callback when card pressed (navigate to detail)
  * @param {boolean} showActions - Show action buttons (default: true)
+ * @param {string} currentUserId - Current user ID to check ownership
  */
 
 import { useRouter } from 'expo-router';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Icon from '../assets/icons';
 import { theme } from '../constants/theme';
 import { HP, WP } from '../helpers/common';
+import VideoPlayer from './VideoPlayer';
 
 const PostCard = ({
   post,
   onLike,
   onComment,
   onShare,
+  onEdit,
+  onDelete,
   onPress,
   showActions = true,
+  currentUserId,
 }) => {
   const router = useRouter();
+  const [menuVisible, setMenuVisible] = useState(false);
+
+  const isOwner = currentUserId && post.user_id === currentUserId;
 
   const handlePress = () => {
     if (onPress) {
@@ -49,6 +60,33 @@ const PostCard = ({
 
   const handleShare = () => {
     if (onShare) onShare(post);
+  };
+
+  const handleEdit = () => {
+    setMenuVisible(false);
+    if (onEdit) onEdit(post);
+  };
+
+  const handleDelete = () => {
+    setMenuVisible(false);
+    Alert.alert(
+      'Delete Post',
+      'Are you sure you want to delete this post? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            if (onDelete) onDelete(post.id);
+          },
+        },
+      ]
+    );
+  };
+
+  const toggleMenu = () => {
+    setMenuVisible(!menuVisible);
   };
 
   // Format timestamp
@@ -94,14 +132,43 @@ const PostCard = ({
         </View>
 
         {/* Options Menu */}
-        <Pressable style={styles.optionsButton}>
-          <Icon
-            name="ThreeDotsHorizontal"
-            size={20}
-            color={theme.colors.textLight}
-          />
-        </Pressable>
+        {isOwner && (
+          <Pressable style={styles.optionsButton} onPress={toggleMenu}>
+            <Icon
+              name="ThreeDotsHorizontal"
+              size={20}
+              color={theme.colors.textLight}
+            />
+          </Pressable>
+        )}
       </View>
+
+      {/* Options Menu Modal */}
+      {isOwner && (
+        <Modal
+          visible={menuVisible}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setMenuVisible(false)}
+        >
+          <Pressable
+            style={styles.modalOverlay}
+            onPress={() => setMenuVisible(false)}
+          >
+            <View style={styles.menuContainer}>
+              <Pressable style={styles.menuItem} onPress={handleEdit}>
+                <Icon name="Edit" size={22} color={theme.colors.text} strokeWidth={1.6} />
+                <Text style={styles.menuText}>Edit Post</Text>
+              </Pressable>
+              <View style={styles.menuDivider} />
+              <Pressable style={styles.menuItem} onPress={handleDelete}>
+                <Icon name="Delete" size={22} color={theme.colors.error} strokeWidth={1.6} />
+                <Text style={[styles.menuText, styles.menuTextDanger]}>Delete Post</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Modal>
+      )}
 
       {/* Content */}
       <View style={styles.content}>
@@ -111,7 +178,7 @@ const PostCard = ({
       </View>
 
       {/* Media - Image */}
-      {post.image_url && (
+      {post.image_url && !post.video_url && (
         <View style={styles.mediaContainer}>
           <Image
             source={{ uri: post.image_url }}
@@ -121,18 +188,10 @@ const PostCard = ({
         </View>
       )}
 
-      {/* Media - Video Placeholder */}
+      {/* Media - Video */}
       {post.video_url && (
         <View style={styles.mediaContainer}>
-          <View style={styles.videoPlaceholder}>
-            <Icon
-              name="Video"
-              size={48}
-              color={theme.colors.textWhite}
-              strokeWidth={1.5}
-            />
-            <Text style={styles.videoText}>Video</Text>
-          </View>
+          <VideoPlayer videoUri={post.video_url} />
         </View>
       )}
 
@@ -304,6 +363,44 @@ const styles = StyleSheet.create({
   },
   actionTextActive: {
     color: theme.colors.like,
+  },
+  // Menu Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  menuContainer: {
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.radius.xl,
+    minWidth: WP(50),
+    paddingVertical: HP(1),
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: HP(1.5),
+    paddingHorizontal: WP(4),
+    gap: WP(3),
+  },
+  menuText: {
+    fontSize: HP(1.8),
+    fontWeight: theme.fonts.medium,
+    color: theme.colors.text,
+  },
+  menuTextDanger: {
+    color: theme.colors.error,
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: theme.colors.border,
+    marginHorizontal: WP(4),
   },
 });
 

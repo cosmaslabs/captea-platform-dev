@@ -3,6 +3,7 @@
  * Full implementation with text input, image/video upload, and submit
  */
 
+import { ResizeMode, Video } from 'expo-av';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -14,7 +15,7 @@ import RichTextInput from '../../components/RichTextInput';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import { theme } from '../../constants/theme';
 import { HP, WP } from '../../helpers/common';
-import { pickImage, uploadFile } from '../../helpers/media';
+import { pickImage, pickVideo, uploadFile } from '../../helpers/media';
 import { usePosts } from '../../hooks/usePosts';
 
 const Create = () => {
@@ -23,6 +24,7 @@ const Create = () => {
 
   const [content, setContent] = useState('');
   const [imageUri, setImageUri] = useState(null);
+  const [videoUri, setVideoUri] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -45,9 +47,28 @@ const Create = () => {
     setImageUri(null);
   };
 
+  const handlePickVideo = async () => {
+    const result = await pickVideo();
+
+    if (result.canceled) return;
+
+    if (!result.success) {
+      Alert.alert('Error', result.error || 'Failed to pick video');
+      return;
+    }
+
+    // Clear image if video is selected (only one media type at a time)
+    setImageUri(null);
+    setVideoUri(result.uri);
+  };
+
+  const handleRemoveVideo = () => {
+    setVideoUri(null);
+  };
+
   const handleSubmit = async () => {
-    if (!content.trim() && !imageUri) {
-      Alert.alert('Empty Post', 'Please add some content or an image');
+    if (!content.trim() && !imageUri && !videoUri) {
+      Alert.alert('Empty Post', 'Please add some content, an image, or a video');
       return;
     }
 
@@ -55,6 +76,7 @@ const Create = () => {
 
     try {
       let imageUrl = null;
+      let videoUrl = null;
 
       // Upload image if present
       if (imageUri) {
@@ -71,8 +93,23 @@ const Create = () => {
         imageUrl = uploadResult.url;
       }
 
+      // Upload video if present
+      if (videoUri) {
+        setUploading(true);
+        const uploadResult = await uploadFile(videoUri, 'posts');
+        setUploading(false);
+
+        if (!uploadResult.success) {
+          Alert.alert('Upload Failed', uploadResult.error || 'Failed to upload video');
+          setSubmitting(false);
+          return;
+        }
+
+        videoUrl = uploadResult.url;
+      }
+
       // Create post
-      const result = await createPost(content.trim(), imageUrl);
+      const result = await createPost(content.trim(), imageUrl, videoUrl);
 
       if (result.success) {
         Alert.alert('Success', 'Post created successfully!', [
@@ -130,41 +167,65 @@ const Create = () => {
             </View>
           )}
 
+          {/* Video Preview */}
+          {videoUri && (
+            <View style={styles.mediaContainer}>
+              <Video
+                source={{ uri: videoUri }}
+                style={styles.video}
+                resizeMode={ResizeMode.CONTAIN}
+                useNativeControls
+                shouldPlay={false}
+              />
+              <Pressable style={styles.removeButton} onPress={handleRemoveVideo}>
+                <Icon name="Delete" size={20} color={theme.colors.textWhite} strokeWidth={2} />
+              </Pressable>
+            </View>
+          )}
+
           {/* Media Buttons */}
           <View style={styles.mediaButtons}>
             <Pressable
-              style={[styles.mediaButton, imageUri && styles.mediaButtonDisabled]}
+              style={[styles.mediaButton, (imageUri || videoUri) && styles.mediaButtonDisabled]}
               onPress={handlePickImage}
-              disabled={imageUri !== null}
+              disabled={imageUri !== null || videoUri !== null}
             >
               <Icon
                 name="Image"
                 size={24}
-                color={imageUri ? theme.colors.textLight : theme.colors.primary}
+                color={imageUri || videoUri ? theme.colors.textLight : theme.colors.primary}
                 strokeWidth={1.6}
               />
               <Text
                 style={[
                   styles.mediaButtonText,
-                  imageUri && styles.mediaButtonTextDisabled,
+                  (imageUri || videoUri) && styles.mediaButtonTextDisabled,
                 ]}
               >
                 Add Photo
               </Text>
             </Pressable>
 
-            {/* Video button placeholder */}
+            {/* Video button */}
             <Pressable
-              style={[styles.mediaButton, styles.mediaButtonDisabled]}
-              disabled
+              style={[styles.mediaButton, (imageUri || videoUri) && styles.mediaButtonDisabled]}
+              onPress={handlePickVideo}
+              disabled={imageUri !== null || videoUri !== null}
             >
               <Icon
                 name="Video"
                 size={24}
-                color={theme.colors.textLight}
+                color={imageUri || videoUri ? theme.colors.textLight : theme.colors.primary}
                 strokeWidth={1.6}
               />
-              <Text style={styles.mediaButtonTextDisabled}>Add Video (Coming Soon)</Text>
+              <Text
+                style={[
+                  styles.mediaButtonText,
+                  (imageUri || videoUri) && styles.mediaButtonTextDisabled,
+                ]}
+              >
+                Add Video
+              </Text>
             </Pressable>
           </View>
 
@@ -172,7 +233,9 @@ const Create = () => {
           {uploading && (
             <View style={styles.uploadStatus}>
               <Loading size="small" />
-              <Text style={styles.uploadText}>Uploading image...</Text>
+              <Text style={styles.uploadText}>
+                Uploading {videoUri ? 'video' : 'image'}...
+              </Text>
             </View>
           )}
 
@@ -238,6 +301,11 @@ const styles = StyleSheet.create({
     width: '100%',
     height: HP(30),
     backgroundColor: theme.colors.backgroundSecondary,
+  },
+  video: {
+    width: '100%',
+    height: HP(30),
+    backgroundColor: theme.colors.textDark,
   },
   removeButton: {
     position: 'absolute',

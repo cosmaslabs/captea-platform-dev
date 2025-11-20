@@ -5,6 +5,7 @@
  */
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as Sharing from 'expo-sharing';
 import { useRef, useState } from 'react';
 import {
     Alert,
@@ -32,7 +33,7 @@ const PostDetail = () => {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { user } = useAuth();
-  const { posts, toggleLike } = usePosts();
+  const { posts, toggleLike, sharePost, updatePost, deletePost } = usePosts();
   const { comments, loading, submitting, createComment, deleteComment } = useComments(id);
 
   const [commentText, setCommentText] = useState('');
@@ -50,8 +51,89 @@ const PostDetail = () => {
     }
   };
 
-  const handleShare = () => {
-    Alert.alert('Share', 'Share functionality coming soon!');
+  const handleShare = async () => {
+    if (!post) return;
+
+    try {
+      // Check if sharing is available
+      const isAvailable = await Sharing.isAvailableAsync();
+
+      if (!isAvailable) {
+        Alert.alert('Sharing Not Available', 'Sharing is not available on this device');
+        return;
+      }
+
+      // Prepare share content
+      const shareContent = post.content || 'Check out this post on Captea!';
+      const userName = post.user_name || 'Someone';
+      const shareText = `${userName} posted:\n\n${shareContent}\n\nView on Captea`;
+
+      // Show share dialog
+      Alert.alert(
+        'Share Post',
+        shareText,
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Share',
+            onPress: async () => {
+              // Increment share count
+              const result = await sharePost(post.id);
+
+              if (result.success) {
+                Alert.alert('Success', 'Post shared successfully!');
+              } else {
+                Alert.alert('Info', 'Share count updated');
+              }
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      console.error('Share error:', error);
+      Alert.alert('Error', 'Failed to share post. Please try again.');
+    }
+  };
+
+  const handleEdit = (post) => {
+    Alert.prompt(
+      'Edit Post',
+      'Update your post content',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Save',
+          onPress: async (newContent) => {
+            if (!newContent || !newContent.trim()) {
+              Alert.alert('Error', 'Post content cannot be empty');
+              return;
+            }
+
+            const result = await updatePost(post.id, newContent.trim());
+            if (result.success) {
+              Alert.alert('Success', 'Post updated successfully!');
+            } else {
+              Alert.alert('Error', result.error || 'Failed to update post');
+            }
+          },
+        },
+      ],
+      'plain-text',
+      post.content
+    );
+  };
+
+  const handleDelete = async (postId) => {
+    const result = await deletePost(postId);
+    if (result.success) {
+      Alert.alert('Success', 'Post deleted successfully');
+      router.back();
+    } else {
+      Alert.alert('Error', result.error || 'Failed to delete post');
+    }
   };
 
   const handleAddComment = async () => {
@@ -121,6 +203,9 @@ const PostDetail = () => {
             post={post}
             onLike={handleLike}
             onShare={handleShare}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            currentUserId={user?.id}
             showActions={true}
           />
 

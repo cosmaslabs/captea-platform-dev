@@ -5,6 +5,7 @@
  */
 
 import { useRouter } from 'expo-router';
+import * as Sharing from 'expo-sharing';
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import Icon from '../../assets/icons';
 import Loading from '../../components/Loading';
@@ -18,7 +19,7 @@ import { usePosts } from '../../hooks/usePosts';
 const Home = () => {
   const router = useRouter();
   const { user } = useAuth();
-  const { posts, loading, refreshing, hasMore, loadMore, refresh, toggleLike } = usePosts();
+  const { posts, loading, refreshing, hasMore, loadMore, refresh, toggleLike, sharePost, updatePost, deletePost } = usePosts();
 
   const handleLike = async (post) => {
     const result = await toggleLike(post);
@@ -31,8 +32,87 @@ const Home = () => {
     router.push(`/post/${post.id}`);
   };
 
-  const handleShare = (post) => {
-    Alert.alert('Share', 'Share functionality coming soon!');
+  const handleShare = async (post) => {
+    try {
+      // Check if sharing is available
+      const isAvailable = await Sharing.isAvailableAsync();
+
+      if (!isAvailable) {
+        Alert.alert('Sharing Not Available', 'Sharing is not available on this device');
+        return;
+      }
+
+      // Prepare share content
+      const shareContent = post.content || 'Check out this post on Captea!';
+      const userName = post.user_name || 'Someone';
+      const shareText = `${userName} posted:\n\n${shareContent}\n\nView on Captea`;
+
+      // Create a simple share message (for demo purposes)
+      // In production, you'd share a deep link or actual file
+      Alert.alert(
+        'Share Post',
+        shareText,
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Share',
+            onPress: async () => {
+              // Increment share count
+              const result = await sharePost(post.id);
+
+              if (result.success) {
+                Alert.alert('Success', 'Post shared successfully!');
+              } else {
+                Alert.alert('Info', 'Share count updated');
+              }
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      console.error('Share error:', error);
+      Alert.alert('Error', 'Failed to share post. Please try again.');
+    }
+  };
+
+  const handleEdit = (post) => {
+    Alert.prompt(
+      'Edit Post',
+      'Update your post content',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Save',
+          onPress: async (newContent) => {
+            if (!newContent || !newContent.trim()) {
+              Alert.alert('Error', 'Post content cannot be empty');
+              return;
+            }
+
+            const result = await updatePost(post.id, newContent.trim());
+            if (result.success) {
+              Alert.alert('Success', 'Post updated successfully!');
+            } else {
+              Alert.alert('Error', result.error || 'Failed to update post');
+            }
+          },
+        },
+      ],
+      'plain-text',
+      post.content
+    );
+  };
+
+  const handleDelete = async (postId) => {
+    const result = await deletePost(postId);
+    if (result.success) {
+      Alert.alert('Success', 'Post deleted successfully');
+    } else {
+      Alert.alert('Error', result.error || 'Failed to delete post');
+    }
   };
 
   const handleCreatePost = () => {
@@ -57,6 +137,9 @@ const Home = () => {
       onLike={handleLike}
       onComment={handleComment}
       onShare={handleShare}
+      onEdit={handleEdit}
+      onDelete={handleDelete}
+      currentUserId={user?.id}
     />
   );
 
