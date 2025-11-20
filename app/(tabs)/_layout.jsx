@@ -1,14 +1,43 @@
 /**
- * Tab Navigation Layout
- * Instagram/WhatsApp-inspired bottom navigation
- * Material You 3 design with Substack aesthetics
+ * Tab Navigation Layout - World-Class Redesign
+ * Premium bottom navigation inspired by Instagram, TikTok, and Threads
+ * Features: Glassmorphism, smooth animations, haptic feedback
  */
 
+import { BlurView } from 'expo-blur';
+import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Tabs } from 'expo-router';
 import { Platform, StyleSheet, View } from 'react-native';
+import Animated, {
+    useAnimatedStyle,
+    useSharedValue,
+    withSpring,
+} from 'react-native-reanimated';
 import Icon from '../../assets/icons';
 import { theme } from '../../constants/theme';
 import { HP } from '../../helpers/common';
+
+// Animated Tab Icon Component
+const AnimatedTabIcon = ({ name, size, color, focused, fill }) => {
+  const scale = useSharedValue(focused ? 1 : 0.9);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: withSpring(scale.value, { damping: 15 }) }],
+  }));
+
+  return (
+    <Animated.View style={[styles.iconWrapper, animatedStyle]}>
+      <Icon
+        name={name}
+        size={size}
+        color={color}
+        strokeWidth={focused ? 2.5 : 2}
+        fill={fill}
+      />
+    </Animated.View>
+  );
+};
 
 export default function TabLayout() {
   return (
@@ -21,7 +50,13 @@ export default function TabLayout() {
         tabBarShowLabel: false,
         tabBarHideOnKeyboard: true,
         tabBarItemStyle: styles.tabBarItem,
-        tabBarIconStyle: styles.tabBarIcon,
+        tabBarBackground: () => (
+          <BlurView
+            intensity={95}
+            tint="light"
+            style={StyleSheet.absoluteFill}
+          />
+        ),
       }}
     >
       <Tabs.Screen
@@ -30,14 +65,18 @@ export default function TabLayout() {
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
-              <Icon
+              <AnimatedTabIcon
                 name="Home"
-                size={24}
+                size={26}
                 color={focused ? theme.colors.primary : color}
-                strokeWidth={focused ? 2.5 : 1.8}
+                focused={focused}
+                fill={focused ? theme.colors.primary : 'transparent'}
               />
             </View>
           ),
+        }}
+        listeners={{
+          tabPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
         }}
       />
 
@@ -47,14 +86,17 @@ export default function TabLayout() {
           title: 'Messages',
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
-              <Icon
+              <AnimatedTabIcon
                 name="MessageCircle"
-                size={24}
+                size={26}
                 color={focused ? theme.colors.primary : color}
-                strokeWidth={focused ? 2.5 : 1.8}
+                focused={focused}
               />
             </View>
           ),
+        }}
+        listeners={{
+          tabPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
         }}
       />
 
@@ -63,15 +105,23 @@ export default function TabLayout() {
         options={{
           title: 'Create',
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconContainer, styles.createButton, focused && styles.createButtonActive]}>
+            <LinearGradient
+              colors={theme.gradients.primary}
+              style={[styles.createButton, focused && styles.createButtonActive]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
               <Icon
                 name="Plus"
-                size={24}
+                size={28}
                 color={theme.colors.onPrimary}
-                strokeWidth={2.5}
+                strokeWidth={3}
               />
-            </View>
+            </LinearGradient>
           ),
+        }}
+        listeners={{
+          tabPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium),
         }}
       />
 
@@ -81,14 +131,17 @@ export default function TabLayout() {
           title: 'Notifications',
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
-              <Icon
+              <AnimatedTabIcon
                 name="Bell"
-                size={24}
+                size={26}
                 color={focused ? theme.colors.primary : color}
-                strokeWidth={focused ? 2.5 : 1.8}
+                focused={focused}
               />
             </View>
           ),
+        }}
+        listeners={{
+          tabPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
         }}
       />
 
@@ -98,14 +151,17 @@ export default function TabLayout() {
           title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
-              <Icon
+              <AnimatedTabIcon
                 name="User"
-                size={24}
+                size={26}
                 color={focused ? theme.colors.primary : color}
-                strokeWidth={focused ? 2.5 : 1.8}
+                focused={focused}
               />
             </View>
           ),
+        }}
+        listeners={{
+          tabPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
         }}
       />
     </Tabs>
@@ -113,40 +169,54 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
+  // Tab Bar Container (Glassmorphism)
   tabBar: {
-    backgroundColor: theme.colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.outlineVariant,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'transparent',
+    borderTopWidth: 0,
     height: Platform.OS === 'ios' ? HP(10) : HP(8),
-    paddingBottom: Platform.OS === 'ios' ? HP(3) : HP(1),
+    paddingBottom: Platform.OS === 'ios' ? HP(2.5) : HP(1),
     paddingTop: HP(1),
-    ...theme.shadows.level2,
+    elevation: 0,
   },
+
+  // Tab Bar Item
   tabBarItem: {
     paddingVertical: HP(0.5),
   },
-  tabBarIcon: {
-    marginTop: HP(0.5),
+
+  // Icon Wrapper (for animation)
+  iconWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+
+  // Icon Container
   iconContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: HP(5),
-    height: HP(5),
-    borderRadius: theme.radius.medium,
+    width: HP(5.5),
+    height: HP(5.5),
+    borderRadius: theme.radius.full,
   },
   iconContainerActive: {
     backgroundColor: theme.colors.primaryContainer,
   },
+
+  // Create Button (Center)
   createButton: {
-    backgroundColor: theme.colors.primary,
-    width: HP(6),
-    height: HP(6),
+    width: HP(6.5),
+    height: HP(6.5),
     borderRadius: theme.radius.full,
-    ...theme.shadows.level3,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...theme.shadows.level4,
   },
   createButtonActive: {
-    backgroundColor: theme.colors.primaryDark,
-    transform: [{ scale: 1.05 }],
+    transform: [{ scale: 1.08 }],
+    ...theme.shadows.level5,
   },
 });

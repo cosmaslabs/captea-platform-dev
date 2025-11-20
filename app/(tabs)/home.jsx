@@ -1,24 +1,29 @@
 /**
- * Home Screen
- * Main feed screen with posts, likes, comments
- * Phase 3: Core Social Features
+ * Home Screen - World-Class Redesign
+ * Premium feed inspired by Instagram, Twitter/X, and TikTok
+ * Features: Sticky header, infinite scroll, smooth animations, optimized UX
  */
 
+import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
-import { useEffect } from 'react';
-import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Alert, FlatList, Pressable, RefreshControl, StatusBar, StyleSheet, Text, View } from 'react-native';
 import Animated, {
+  Extrapolate,
+  interpolate,
+  useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import Icon from '../../assets/icons';
 import EmptyState from '../../components/EmptyState';
 import Loading from '../../components/Loading';
-import PostCard from '../../components/PostCard';
+import PostCard from '../../components/PostCardNew';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import { theme } from '../../constants/theme';
@@ -27,19 +32,48 @@ import { HP, WP } from '../../helpers/common';
 import { usePosts } from '../../hooks/usePosts';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
 const Home = () => {
   const router = useRouter();
   const { user } = useAuth();
   const { posts, loading, refreshing, hasMore, loadMore, refresh, toggleLike, sharePost, updatePost, deletePost } = usePosts();
 
-  // FAB animation
+  const flatListRef = useRef(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  // Animation values
+  const scrollY = useSharedValue(0);
+  const headerOpacity = useSharedValue(1);
   const fabScale = useSharedValue(1);
+  const scrollTopOpacity = useSharedValue(0);
 
   useEffect(() => {
-    // Entrance animation for FAB
+    // Entrance animation
     fabScale.value = withSpring(1, { damping: 12, stiffness: 100 });
   }, []);
+
+  // Scroll handler for parallax and animations
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+
+      // Show/hide scroll to top button
+      if (event.contentOffset.y > 500) {
+        scrollTopOpacity.value = withTiming(1, { duration: 200 });
+      } else {
+        scrollTopOpacity.value = withTiming(0, { duration: 200 });
+      }
+
+      // Header opacity effect
+      headerOpacity.value = interpolate(
+        event.contentOffset.y,
+        [0, 100],
+        [1, 0.95],
+        Extrapolate.CLAMP
+      );
+    },
+  });
 
   const handleLike = async (post) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -141,31 +175,88 @@ const Home = () => {
     router.push('/create');
   };
 
+  const handleScrollToTop = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+  };
+
+  // Header animated style
+  const headerAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: headerOpacity.value,
+  }));
+
+  // Scroll to top button style
+  const scrollTopStyle = useAnimatedStyle(() => ({
+    opacity: scrollTopOpacity.value,
+    transform: [
+      {
+        scale: interpolate(
+          scrollTopOpacity.value,
+          [0, 1],
+          [0.8, 1],
+          Extrapolate.CLAMP
+        ),
+      },
+    ],
+  }));
+
+  // FAB animated style
+  const fabAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: fabScale.value }],
+  }));
+
   const renderHeader = () => (
-    <View style={styles.headerContainer}>
-      <View style={styles.header}>
-        <View style={styles.logoContainer}>
-          <Text style={styles.logo}>Captea</Text>
-          <View style={styles.logoBadge}>
-            <Icon name="Heart" size={12} color={theme.colors.onPrimary} fill={theme.colors.primary} strokeWidth={0} />
+    <Animated.View style={[styles.stickyHeaderContainer, headerAnimatedStyle]}>
+      <BlurView intensity={95} tint="light" style={styles.headerBlur}>
+        <View style={styles.header}>
+          {/* Logo Section */}
+          <Pressable style={styles.logoContainer} onPress={handleScrollToTop}>
+            <LinearGradient
+              colors={theme.gradients.primary}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.logoGradient}
+            >
+              <Text style={styles.logo}>C</Text>
+            </LinearGradient>
+            <Text style={styles.logoText}>Captea</Text>
+          </Pressable>
+
+          {/* Action Buttons */}
+          <View style={styles.headerActions}>
+            <Pressable
+              style={styles.headerButton}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push('/search');
+              }}
+            >
+              <Icon name="Search" size={22} color={theme.colors.text} strokeWidth={2} />
+            </Pressable>
+
+            <Pressable
+              style={styles.headerButton}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push('/notifications');
+              }}
+            >
+              <Icon name="Heart" size={22} color={theme.colors.text} strokeWidth={2} />
+            </Pressable>
+
+            <Pressable
+              style={[styles.headerButton, styles.messagesButton]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push('/messages');
+              }}
+            >
+              <Icon name="MessageCircle" size={22} color={theme.colors.text} strokeWidth={2} />
+            </Pressable>
           </View>
         </View>
-        <View style={styles.headerActions}>
-          <Pressable
-            style={styles.headerButton}
-            onPress={() => {/* Search functionality */}}
-          >
-            <Icon name="Search" size={22} color={theme.colors.textSecondary} strokeWidth={2} />
-          </Pressable>
-          <Pressable
-            style={styles.headerButton}
-            onPress={() => router.push('/notifications')}
-          >
-            <Icon name="Bell" size={22} color={theme.colors.textSecondary} strokeWidth={2} />
-          </Pressable>
-        </View>
-      </View>
-    </View>
+      </BlurView>
+    </Animated.View>
   );
 
   const renderPost = ({ item }) => (
@@ -221,10 +312,6 @@ const Home = () => {
     handleCreatePost();
   };
 
-  const fabAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: fabScale.value }],
-  }));
-
   if (loading && posts.length === 0) {
     return (
       <ScreenWrapper bg={theme.colors.backgroundSecondary}>
@@ -236,10 +323,12 @@ const Home = () => {
 
   return (
     <ScreenWrapper bg={theme.colors.backgroundSecondary}>
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.surface} />
       <View style={styles.container}>
         {renderHeader()}
 
-        <FlatList
+        <AnimatedFlatList
+          ref={flatListRef}
           data={posts}
           renderItem={renderPost}
           keyExtractor={(item) => item.id}
@@ -256,9 +345,27 @@ const Home = () => {
             />
           }
           onEndReached={loadMore}
-          onEndReachedThreshold={0.5}
+          onEndReachedThreshold={0.3}
           showsVerticalScrollIndicator={false}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={5}
+          windowSize={10}
+          initialNumToRender={5}
+          updateCellsBatchingPeriod={50}
         />
+
+        {/* Scroll to Top Button */}
+        <AnimatedPressable
+          style={[styles.scrollTopButton, scrollTopStyle]}
+          onPress={handleScrollToTop}
+          pointerEvents={scrollTopOpacity.value > 0 ? 'auto' : 'none'}
+        >
+          <BlurView intensity={90} tint="light" style={styles.scrollTopBlur}>
+            <Icon name="ChevronUp" size={24} color={theme.colors.primary} strokeWidth={2.5} />
+          </BlurView>
+        </AnimatedPressable>
 
         {/* Enhanced Floating Action Button */}
         <AnimatedPressable style={[styles.fab, fabAnimatedStyle]} onPress={handleFabPress}>
@@ -281,65 +388,114 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.backgroundSecondary,
   },
-  headerContainer: {
-    backgroundColor: theme.colors.surface,
-    ...theme.shadows.level1,
+
+  // Sticky Header Styles (Instagram-inspired)
+  stickyHeaderContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+  },
+  headerBlur: {
+    overflow: 'hidden',
+    borderBottomWidth: 0.5,
+    borderBottomColor: theme.colors.outlineVariant,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: WP(5),
-    paddingVertical: HP(1.8),
+    paddingHorizontal: WP(4),
+    paddingVertical: HP(1.5),
+    backgroundColor: 'transparent',
   },
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: WP(2),
+    gap: WP(2.5),
   },
-  logo: {
-    fontSize: HP(3.2),
-    fontWeight: theme.fonts.extrabold,
-    color: theme.colors.primary,
-    letterSpacing: -0.5,
-  },
-  logoBadge: {
-    width: HP(2.2),
-    height: HP(2.2),
-    borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.primaryContainer,
+  logoGradient: {
+    width: HP(4),
+    height: HP(4),
+    borderRadius: theme.radius.medium,
     justifyContent: 'center',
     alignItems: 'center',
+    ...theme.shadows.level2,
+  },
+  logo: {
+    fontSize: HP(2.2),
+    fontWeight: theme.fonts.extrabold,
+    color: theme.colors.onPrimary,
+    letterSpacing: -0.5,
+  },
+  logoText: {
+    fontSize: HP(2.5),
+    fontWeight: theme.fonts.extrabold,
+    color: theme.colors.text,
+    letterSpacing: -0.5,
   },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: WP(2),
+    gap: WP(2.5),
   },
   headerButton: {
-    width: HP(4.5),
-    height: HP(4.5),
-    borderRadius: theme.radius.medium,
-    backgroundColor: theme.colors.surfaceVariant,
+    width: HP(4.2),
+    height: HP(4.2),
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.backgroundSecondary,
     justifyContent: 'center',
     alignItems: 'center',
+    ...theme.shadows.level1,
   },
+  messagesButton: {
+    backgroundColor: theme.colors.primaryContainer,
+  },
+
+  // List Styles
   listContent: {
-    paddingTop: HP(0.5),
-    paddingBottom: HP(12),
+    paddingTop: HP(8), // Space for sticky header
+    paddingBottom: HP(15),
+    paddingHorizontal: 0,
   },
+
+  // Footer Loader
   footerLoader: {
-    paddingVertical: HP(3),
+    paddingVertical: HP(2.5),
     alignItems: 'center',
   },
+
+  // Scroll to Top Button (Twitter-inspired)
+  scrollTopButton: {
+    position: 'absolute',
+    top: HP(10),
+    right: WP(5),
+    width: HP(5),
+    height: HP(5),
+    borderRadius: theme.radius.full,
+    overflow: 'hidden',
+    ...theme.shadows.level3,
+  },
+  scrollTopBlur: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.outlineVariant,
+    borderRadius: theme.radius.full,
+  },
+
+  // FAB (TikTok-inspired)
   fab: {
     position: 'absolute',
-    bottom: HP(10),
+    bottom: HP(12),
     right: WP(5),
-    width: HP(7.5),
-    height: HP(7.5),
+    width: HP(7),
+    height: HP(7),
     borderRadius: theme.radius.full,
-    ...theme.shadows.level5,
+    ...theme.shadows.level4,
   },
   fabGradient: {
     width: '100%',
