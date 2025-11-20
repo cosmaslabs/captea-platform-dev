@@ -1,0 +1,139 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║          📱 CAPTEA PLATFORM - ANDROID PHONE SETUP                   ║
+║              Quick Start Guide (2 Minutes)                          ║
+║              ✅ WHITE SCREEN ISSUE FIXED                            ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+⚡ LATEST UPDATE (Nov 20, 2025):
+   Mobile web app white screen FIXED! Now works perfectly on phones.
+
+┌──────────────────────────────────────────────────────────────────────┐
+│  ✅ BOTH OPTIONS ARE NOW READY - CHOOSE ONE:                        │
+└──────────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════
+  🎯 OPTION 1: INSTALL ANDROID APK (Full Native App)
+═══════════════════════════════════════════════════════════════════════
+
+  📱 ON YOUR ANDROID PHONE:
+
+  1. Make sure phone is on SAME WiFi as server (192.168.100.x)
+
+  2. Open browser, go to:
+     ┌────────────────────────────────────────────┐
+     │  http://192.168.100.2:8083                 │
+     └────────────────────────────────────────────┘
+
+  3. Tap "Download APK (84 MB)" button
+
+  4. When download completes:
+     - Settings → Security → Install unknown apps
+     - Enable for your browser
+     - Tap the downloaded APK file
+     - Tap "Install"
+
+  5. Launch "Captea Platform" from app drawer
+
+  ✅ Benefits: Full native performance, offline capability, push notifications
+
+═══════════════════════════════════════════════════════════════════════
+  🌐 OPTION 2: USE WEB APP (No Installation Needed)
+═══════════════════════════════════════════════════════════════════════
+
+  📱 ON YOUR ANDROID PHONE BROWSER:
+
+  Choose one URL:
+
+  A) LOCAL NETWORK (Same WiFi):
+     ┌────────────────────────────────────────────┐
+     │  http://192.168.100.2:8082                 │
+     └────────────────────────────────────────────┘
+
+  B) PUBLIC INTERNET (Works Anywhere):
+     ┌────────────────────────────────────────────┐
+     │  https://captea.cosmaslabs.com             │
+     └────────────────────────────────────────────┘
+
+  Just open the URL in Chrome, Firefox, or any mobile browser!
+
+  ✅ Benefits: No installation, works on iOS too, always latest version
+
+═══════════════════════════════════════════════════════════════════════
+  🔧 TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════
+
+  ❌ "Can't reach 192.168.100.2:8083"
+     → Check phone is on same WiFi network
+     → Try using https://captea.cosmaslabs.com instead
+
+  ❌ "Installation blocked"
+     → Settings → Security → Install unknown apps → Enable for browser
+
+  ❌ "Website not loading"
+     → Both http://192.168.100.2:8082 AND https://captea.cosmaslabs.com work
+     → Try the public URL if local doesn't work
+     → Check phone has internet connection
+
+═══════════════════════════════════════════════════════════════════════
+  📊 SERVER STATUS (All Running ✅)
+═══════════════════════════════════════════════════════════════════════
+
+  ✅ Web App:         http://192.168.100.2:8082
+  ✅ APK Download:    http://192.168.100.2:8083
+  ✅ Public Website:  https://captea.cosmaslabs.com
+  ✅ Cloudflare:      Active
+  ✅ Auto-Start:      Enabled
+
+═══════════════════════════════════════════════════════════════════════
+  🎯 WHAT TO TEST (5-10 Minutes)
+═══════════════════════════════════════════════════════════════════════
+
+  □ Welcome screen loads
+  □ Sign up with email/password
+  □ Login works
+  □ Create a post
+  □ Upload image from gallery
+  □ Upload image from camera
+  □ View home feed
+  □ Like a post
+  □ Comment on post
+  □ View profile
+  □ Edit profile
+  □ Navigation smooth (no lag)
+  □ No crashes
+
+═══════════════════════════════════════════════════════════════════════
+  📞 QUICK COMMANDS (On Server)
+═══════════════════════════════════════════════════════════════════════
+
+  # Check servers running
+  curl http://192.168.100.2:8082
+  curl http://192.168.100.2:8083
+
+  # View logs
+  tail -f /tmp/captea-web.log
+  tail -f /tmp/captea-apk.log
+
+  # Restart if needed
+  pkill -f "serve.*808"
+  cd ~/projects/captea-platform-dev
+  serve dist -l tcp://0.0.0.0:8082 --single > /tmp/captea-web.log 2>&1 &
+  cd apk-download
+  serve . -l tcp://0.0.0.0:8083 > /tmp/captea-apk.log 2>&1 &
+
+═══════════════════════════════════════════════════════════════════════
+  🎉 YOU'RE ALL SET!
+═══════════════════════════════════════════════════════════════════════
+
+  1. Pick your option (APK or Web)
+  2. Open the URL on your phone
+  3. Start testing!
+
+  📝 Full guide: ~/projects/captea-platform-dev/MOBILE_TESTING_GUIDE.md
+
+═══════════════════════════════════════════════════════════════════════
+
+Updated: November 20, 2025, 16:05 EAT
+Status: ✅ READY FOR TESTING

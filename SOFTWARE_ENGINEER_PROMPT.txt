@@ -1,0 +1,233 @@
+================================================================================
+PROMPT FOR SENIOR SOFTWARE ENGINEER AGENT - CAPTEA WEB DEPLOYMENT
+================================================================================
+
+Date: November 20, 2025
+Priority: P2 (Important - Non-Critical)
+Estimated Time: 40-60 minutes
+
+================================================================================
+CONTEXT ATTACHMENTS REQUIRED
+================================================================================
+
+Please attach these two files as context before starting:
+
+1. CAPTEA_WEB_DEPLOYMENT_TASK_20251120.md
+   - Complete task assignment (12 pages)
+   - Problem analysis and solutions
+   - Step-by-step implementation guide
+   - Testing checklist and rollback procedures
+
+2. INFRASTRUCTURE_AGENT_SESSION_COMPLETE_20251120.md
+   - Infrastructure status (what's already done)
+   - Cloudflare tunnel configuration
+   - Monitoring and alerting setup
+   - Current system state
+
+================================================================================
+YOUR MISSION
+================================================================================
+
+Deploy Captea Platform web application at: https://captea.cosmaslabs.com
+
+The Infrastructure Agent has prepared everything (tunnel updated, monitoring 
+configured, capacity available) but discovered a web build issue that requires
+your expertise to resolve.
+
+================================================================================
+THE PROBLEM
+================================================================================
+
+Web build fails with: ReferenceError: window is not defined
+
+Root Cause:
+- React Native app uses AsyncStorage for local storage
+- Supabase Auth uses AsyncStorage for session persistence  
+- Expo static export (output: "static") pre-renders at build time
+- No window object exists during SSR → AsyncStorage crashes
+
+================================================================================
+THE SOLUTION (Recommended: Option 1)
+================================================================================
+
+Change app.json to use SPA mode instead of static export:
+
+1. Edit ~/projects/captea-platform-dev/app.json
+   Change: "output": "static"
+   To:     "output": "single"
+
+2. Rebuild web app:
+   cd ~/projects/captea-platform-dev
+   npx expo export -p web
+
+3. Serve locally on port 8082:
+   serve dist -l 8082
+
+4. Update Cloudflare tunnel config (instructions in task doc)
+
+5. Add DNS CNAME record: captea → tunnel hostname
+
+6. Test: https://captea.cosmaslabs.com
+
+Complete step-by-step instructions are in the task assignment document.
+
+================================================================================
+WHAT'S ALREADY DONE (Infrastructure Agent)
+================================================================================
+
+✅ cloudflared updated to 2025.11.1
+✅ Prometheus monitoring configured for tunnel
+✅ AlertManager rules created (4 tunnel alerts)
+✅ Port 8082 available and ready
+✅ Tunnel operational and stable
+✅ OpenProject unaffected (https://openproject.cosmaslabs.com works)
+
+================================================================================
+CLOUDFLARE TUNNEL CONFIG TO ADD
+================================================================================
+
+Add this to: /opt/cosmaslabs/infrastructure/networking/cloudflare/tunnels/cosmaslabs-openproject-config.yml
+
+Insert BEFORE the catch-all rule (- service: http_status:404):
+
+  # Captea Platform web app (ADDED November 20, 2025)
+  - hostname: captea.cosmaslabs.com
+    service: http://localhost:8082
+    originRequest:
+      httpHostHeader: captea.cosmaslabs.com
+      connectTimeout: 30s
+      tlsTimeout: 10s
+      tcpKeepAlive: 30s
+      noTLSVerify: true  # localhost doesn't have TLS
+
+Then restart: sudo systemctl restart cloudflared-openproject
+
+================================================================================
+DNS CONFIGURATION
+================================================================================
+
+Cloudflare Dashboard: https://dash.cloudflare.com
+Domain: cosmaslabs.com → DNS → Records
+
+Add CNAME record:
+- Type: CNAME
+- Name: captea
+- Target: 40e26158-b34e-41ee-9839-9ddf9ebb33ff.cfargotunnel.com
+- Proxy: Enabled (orange cloud)
+- TTL: Auto
+
+Wait 30-60 seconds for DNS propagation.
+
+================================================================================
+TESTING CHECKLIST
+================================================================================
+
+Layer 1 - Web Build:
+□ npx expo export -p web succeeds
+□ dist/ directory created with index.html
+
+Layer 2 - Local Server:
+□ serve dist -l 8082 starts
+□ curl http://localhost:8082 returns 200
+□ ss -tlnp | grep 8082 shows serve process
+
+Layer 3 - Tunnel:
+□ systemctl status cloudflared-openproject shows active
+□ No errors in journalctl -u cloudflared-openproject -n 50
+
+Layer 4 - DNS:
+□ dig captea.cosmaslabs.com returns Cloudflare IPs
+
+Layer 5 - HTTPS:
+□ curl -I https://captea.cosmaslabs.com returns HTTP/2 200
+
+Layer 6 - App Functionality:
+□ Browser loads app at https://captea.cosmaslabs.com
+□ Login/Signup screens accessible
+□ No JavaScript errors in console (F12)
+□ Mobile responsive
+
+================================================================================
+ROLLBACK PROCEDURE (if needed)
+================================================================================
+
+If deployment fails, rollback in <3 minutes:
+
+1. Restore tunnel config backup:
+   sudo cp /opt/cosmaslabs/infrastructure/networking/cloudflare/tunnels/cosmaslabs-openproject-config.yml.backup.* \
+          /opt/cosmaslabs/infrastructure/networking/cloudflare/tunnels/cosmaslabs-openproject-config.yml
+
+2. Restart tunnel:
+   sudo systemctl restart cloudflared-openproject
+
+3. Verify OpenProject works:
+   curl -I https://openproject.cosmaslabs.com
+
+================================================================================
+SUCCESS CRITERIA
+================================================================================
+
+Deployment complete when:
+□ Web build succeeds (npx expo export -p web)
+□ Local server running on port 8082
+□ Cloudflare tunnel config updated
+□ DNS CNAME record created
+□ https://captea.cosmaslabs.com loads correctly
+□ Browser shows Captea app (login/signup screens)
+□ Supabase auth initializes without errors
+□ Mobile responsive confirmed
+□ systemd service created (optional but recommended)
+
+================================================================================
+ADDITIONAL RESOURCES
+================================================================================
+
+Captea Project:
+- Location: ~/projects/captea-platform-dev/
+- README.md: Project overview
+- DEPLOYMENT_GUIDE.md: Deployment workflow
+- CLOUDFLARE_SETUP.md: Original tunnel setup notes
+
+Infrastructure Docs:
+- Complete audit: /usr/share/doc/.../guides/CLOUDFLARE_TUNNEL_INFRASTRUCTURE_AUDIT.md
+- Agent instructions: /usr/share/doc/.../AGENTS.md
+
+Expo Dashboard:
+- Project: https://expo.dev/accounts/cosmaslabs/projects/captea-platform-dev
+- Latest Build: https://expo.dev/accounts/cosmaslabs/projects/captea-platform-dev/builds/6b7398e2-60fb-4a23-b30a-944ad4b6035c
+- APK Download: https://expo.dev/artifacts/eas/egzukAZyWRTNveR4Nepr2W.apk
+
+================================================================================
+ESTIMATED TIMELINE
+================================================================================
+
+Phase 1: Fix web build (edit app.json, rebuild) ........... 15 min
+Phase 2: Configure Cloudflare tunnel ..................... 10 min
+Phase 3: DNS setup ....................................... 5 min
+Phase 4: Testing ......................................... 10 min
+Phase 5: Production hardening (optional) ................. 20 min
+                                                TOTAL: 40-60 min
+
+================================================================================
+CONTACT & ESCALATION
+================================================================================
+
+Infrastructure Team: infrastructure@cosmaslabs.com
+Development Team: dev@cosmaslabs.com
+Emergency Rollback: Use procedure above (<3 minutes)
+
+================================================================================
+READY TO START?
+================================================================================
+
+1. Attach the two context files (listed at top)
+2. Read CAPTEA_WEB_DEPLOYMENT_TASK_20251120.md completely
+3. Execute Phase 1: Fix web build (change app.json)
+4. Execute Phase 2-4: Deploy and test
+5. Execute Phase 5: Production hardening (optional)
+6. Update documentation with deployment status
+7. Notify founder: Captea deployed at https://captea.cosmaslabs.com
+
+Good luck! The infrastructure is ready and waiting for you. 🚀
+
+================================================================================
