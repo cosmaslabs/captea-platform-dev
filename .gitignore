@@ -28,3 +28,8 @@ coverage/
 *.mobileprovision
 *.orig.*
 web-build/
+
+# APK and build artifacts
+*.apk
+*.aab
+*.ipa
