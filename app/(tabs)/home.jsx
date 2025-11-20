@@ -120,14 +120,29 @@ const Home = () => {
   };
 
   const renderHeader = () => (
-    <View style={styles.header}>
-      <Text style={styles.title}>Captea</Text>
-      <Pressable
-        style={styles.profileButton}
-        onPress={() => router.push('/profile')}
-      >
-        <Icon name="User" size={24} color={theme.colors.text} />
-      </Pressable>
+    <View style={styles.headerContainer}>
+      <View style={styles.header}>
+        <View style={styles.logoContainer}>
+          <Text style={styles.logo}>Captea</Text>
+          <View style={styles.logoBadge}>
+            <Icon name="Heart" size={12} color={theme.colors.onPrimary} fill={theme.colors.primary} strokeWidth={0} />
+          </View>
+        </View>
+        <View style={styles.headerActions}>
+          <Pressable
+            style={styles.headerButton}
+            onPress={() => {/* Search functionality */}}
+          >
+            <Icon name="Search" size={22} color={theme.colors.textSecondary} strokeWidth={2} />
+          </Pressable>
+          <Pressable
+            style={styles.headerButton}
+            onPress={() => router.push('/notifications')}
+          >
+            <Icon name="Bell" size={22} color={theme.colors.textSecondary} strokeWidth={2} />
+          </Pressable>
+        </View>
+      </View>
     </View>
   );
 
@@ -214,77 +229,102 @@ const Home = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: theme.colors.backgroundSecondary,
+  },
+  headerContainer: {
+    backgroundColor: theme.colors.surface,
+    ...theme.shadows.level1,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: WP(5),
-    paddingVertical: HP(2),
-    backgroundColor: theme.colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    paddingVertical: HP(1.8),
   },
-  title: {
-    fontSize: HP(3),
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: WP(2),
+  },
+  logo: {
+    fontSize: HP(3.2),
     fontWeight: theme.fonts.extrabold,
     color: theme.colors.primary,
+    letterSpacing: -0.5,
   },
-  profileButton: {
-    padding: WP(2),
+  logoBadge: {
+    width: HP(2.2),
+    height: HP(2.2),
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.primaryContainer,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: WP(2),
+  },
+  headerButton: {
+    width: HP(4.5),
+    height: HP(4.5),
+    borderRadius: theme.radius.medium,
+    backgroundColor: theme.colors.surfaceVariant,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   listContent: {
-    paddingHorizontal: WP(5),
-    paddingTop: HP(2),
-    paddingBottom: HP(10),
+    paddingTop: HP(1.5),
+    paddingBottom: HP(12),
+    gap: HP(1.5),
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: HP(10),
+    paddingVertical: HP(12),
+    paddingHorizontal: WP(10),
   },
   emptyTitle: {
-    fontSize: HP(2.5),
+    fontSize: HP(2.4),
     fontWeight: theme.fonts.bold,
     color: theme.colors.text,
     marginTop: HP(2),
+    textAlign: 'center',
   },
   emptyText: {
-    fontSize: HP(1.8),
-    fontWeight: theme.fonts.medium,
-    color: theme.colors.textLight,
+    ...theme.typography.bodyMedium,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
     marginTop: HP(1),
-    paddingHorizontal: WP(10),
   },
   emptyButton: {
     marginTop: HP(3),
-    paddingHorizontal: WP(8),
-    paddingVertical: HP(1.5),
+    paddingHorizontal: WP(10),
+    paddingVertical: HP(1.8),
     backgroundColor: theme.colors.primary,
-    borderRadius: theme.radius.doublexl,
+    borderRadius: theme.radius.full,
+    ...theme.shadows.level2,
   },
   emptyButtonText: {
-    fontSize: HP(1.8),
-    fontWeight: theme.fonts.bold,
-    color: theme.colors.textWhite,
+    ...theme.typography.labelLarge,
+    color: theme.colors.onPrimary,
   },
   footerLoader: {
-    paddingVertical: HP(2),
+    paddingVertical: HP(3),
     alignItems: 'center',
   },
   fab: {
     position: 'absolute',
-    bottom: HP(3),
+    bottom: HP(10),
     right: WP(5),
     width: HP(7),
     height: HP(7),
-    borderRadius: HP(3.5),
+    borderRadius: theme.radius.full,
     backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    boxShadow: `0 4px 8px ${theme.colors.text}4D`,
-    elevation: 8,
+    ...theme.shadows.level4,
   },
 });
 

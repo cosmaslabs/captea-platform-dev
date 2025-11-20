@@ -256,21 +256,22 @@ const PostCard = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.colors.background,
-    borderRadius: theme.radius.lg,
-    padding: WP(4),
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.large,
+    paddingVertical: HP(2),
     marginBottom: HP(1.5),
-    borderWidth: 1,
-    borderColor: theme.colors.border,
+    marginHorizontal: WP(4),
+    ...theme.shadows.level1,
   },
   cardPressed: {
-    opacity: 0.95,
-    backgroundColor: theme.colors.backgroundSecondary,
+    opacity: 0.96,
+    backgroundColor: theme.colors.surfaceVariant,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: HP(1.5),
+    paddingHorizontal: WP(4),
+    marginBottom: HP(1.2),
   },
   avatarContainer: {
     marginRight: WP(3),
@@ -278,26 +279,27 @@ const styles = StyleSheet.create({
   avatar: {
     width: HP(5),
     height: HP(5),
-    borderRadius: HP(2.5),
+    borderRadius: theme.radius.full,
+    borderWidth: 2,
+    borderColor: theme.colors.primaryContainer,
   },
   avatarPlaceholder: {
     width: HP(5),
     height: HP(5),
-    borderRadius: HP(2.5),
-    backgroundColor: theme.colors.primary,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.primaryContainer,
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarText: {
-    fontSize: HP(2.2),
-    fontWeight: theme.fonts.bold,
-    color: theme.colors.textWhite,
+    ...theme.typography.titleMedium,
+    color: theme.colors.primary,
   },
   userInfo: {
     flex: 1,
   },
   userName: {
-    fontSize: HP(1.9),
+    ...theme.typography.titleMedium,
     fontWeight: theme.fonts.semibold,
     color: theme.colors.text,
   },
