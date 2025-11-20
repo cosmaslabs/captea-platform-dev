@@ -1,97 +1,163 @@
 /**
- * Theme configuration for Captea Platform
- * Material You 3 inspired with Substack aesthetic
- * Instagram/WhatsApp-style dashboard design
+ * Theme Configuration - Captea Platform
+ * Premium design system combining:
+ * - Material Design 3 (Google) - Dynamic color, elevation, state layers
+ * - Apple Human Interface Guidelines - Clarity, depth, consistency
+ * - Facebook/WhatsApp aesthetics - Social warmth, accessibility
  */
 
 export const theme = {
   colors: {
-    // Primary brand colors - Substack orange with Material You 3
-    primary: '#FF6719',
-    primaryLight: '#FF8547',
-    primaryDark: '#E65100',
-    primaryContainer: '#FFDBCC',
+    // Primary brand colors - Material Design 3 dynamic color
+    // Inspired by WhatsApp green with warmth
+    primary: '#00A884',
+    primaryLight: '#26D07C',
+    primaryDark: '#008069',
+    primaryContainer: '#D8F8EF',
     onPrimary: '#FFFFFF',
-    onPrimaryContainer: '#2E1500',
+    onPrimaryContainer: '#002118',
+    primaryFixed: '#A8F5E3',
+    primaryFixedDim: '#8CD9C7',
 
-    // Secondary colors - Warm accent
-    secondary: '#7D5260',
-    secondaryLight: '#A67C89',
-    secondaryDark: '#5D3A47',
-    secondaryContainer: '#FFD9E3',
+    // Secondary colors - Facebook blue warmth
+    secondary: '#0866FF',
+    secondaryLight: '#4A8BFF',
+    secondaryDark: '#0552CC',
+    secondaryContainer: '#D6E6FF',
     onSecondary: '#FFFFFF',
+    onSecondaryContainer: '#001633',
+    secondaryFixed: '#D6E6FF',
+    secondaryFixedDim: '#ADC7FF',
 
-    // Tertiary colors - Cool complement
-    tertiary: '#006874',
-    tertiaryLight: '#4F9AA3',
-    tertiaryDark: '#004D57',
-    tertiaryContainer: '#97F0FF',
+    // Tertiary colors - Warm accent (Apple's soft coral)
+    tertiary: '#FF6B6B',
+    tertiaryLight: '#FF8E8E',
+    tertiaryDark: '#E05555',
+    tertiaryContainer: '#FFE0E0',
+    onTertiary: '#FFFFFF',
+    onTertiaryContainer: '#410001',
+    tertiaryFixed: '#FFE0E0',
+    tertiaryFixedDim: '#FFB4B4',
 
-    // Background colors - Clean and minimal
-    background: '#FFFBFF',
-    backgroundSecondary: '#F5F5F5',
+    // Background colors - Apple HCI clean canvas
+    background: '#FFFFFF',
+    backgroundSecondary: '#F6F6F6',
     backgroundTertiary: '#FAFAFA',
-    surface: '#FFFBFF',
-    surfaceVariant: '#F2DFD1',
-    surfaceDim: '#E0D9D0',
-    surfaceBright: '#FFFFFF',
+    onBackground: '#1A1C1E',
 
-    // Text colors
-    text: '#1C1B1E',
-    textSecondary: '#49454E',
-    textLight: '#79747E',
-    textDark: '#000000',
+    // Surface colors - Material 3 surface tints
+    surface: '#FFFFFF',
+    surfaceVariant: '#DFE2EB',
+    surfaceDim: '#D9DADC',
+    surfaceBright: '#F9FAFB',
+    surfaceContainer: '#ECEEF1',
+    surfaceContainerLow: '#F3F4F6',
+    surfaceContainerLowest: '#FFFFFF',
+    surfaceContainerHigh: '#E3E5E8',
+    surfaceContainerHighest: '#DDE0E3',
+    onSurface: '#1A1C1E',
+    onSurfaceVariant: '#43474E',
+
+    // Text colors - Apple HCI hierarchy
+    text: '#1A1C1E',
+    textPrimary: '#000000',
+    textSecondary: '#65676B',
+    textTertiary: '#8A8D91',
+    textLight: '#B0B3B8',
+    textDark: '#050505',
     textWhite: '#FFFFFF',
-    textDisabled: '#C4C6C6',
-    onSurface: '#1C1B1E',
-    onSurfaceVariant: '#524943',
+    textDisabled: '#BDC1C6',
+    textPlaceholder: '#8E9196',
 
-    // Border & divider colors
-    border: '#E7E0EB',
-    borderLight: '#F4EFF4',
-    borderDark: '#CAC4CF',
-    outline: '#847875',
-    outlineVariant: '#D7C2B9',
+    // Border & divider colors - Facebook/WhatsApp inspired
+    border: '#E4E6EB',
+    borderLight: '#F0F2F5',
+    borderDark: '#CED0D4',
+    divider: '#E4E6EB',
+    dividerLight: '#F0F2F5',
+    outline: '#79747E',
+    outlineVariant: '#C4C7C5',
 
-    // Status colors - Material You 3 semantic
-    success: '#006E26',
-    successContainer: '#95F7B4',
-    error: '#BA1A1A',
-    errorContainer: '#FFDAD6',
-    warning: '#815600',
-    warningContainer: '#FFDDB3',
-    info: '#006495',
-    infoContainer: '#C9E6FF',
+    // Status colors - Material Design 3 semantic system
+    success: '#00A884',
+    successLight: '#26D07C',
+    successDark: '#008069',
+    successContainer: '#D8F8EF',
+    onSuccess: '#FFFFFF',
+    onSuccessContainer: '#002118',
 
-    // Social interaction colors
-    like: '#C00F17',
-    likeActive: '#FF5449',
-    comment: '#6B5D00',
-    commentActive: '#FFC107',
-    share: '#00668A',
-    shareActive: '#00B4D8',
+    error: '#F02849',
+    errorLight: '#FF5470',
+    errorDark: '#D41534',
+    errorContainer: '#FFD9DD',
+    onError: '#FFFFFF',
+    onErrorContainer: '#410002',
 
-    // WhatsApp-inspired colors
+    warning: '#FFA726',
+    warningLight: '#FFB951',
+    warningDark: '#FB8C00',
+    warningContainer: '#FFE4CC',
+    onWarning: '#FFFFFF',
+    onWarningContainer: '#2E1500',
+
+    info: '#0866FF',
+    infoLight: '#4A8BFF',
+    infoDark: '#0552CC',
+    infoContainer: '#D6E6FF',
+    onInfo: '#FFFFFF',
+    onInfoContainer: '#001633',
+
+    // Social interaction colors - Facebook inspired
+    like: '#F02849',
+    likeActive: '#FF3D5C',
+    likeContainer: '#FFE0E5',
+    comment: '#65676B',
+    commentActive: '#1A1C1E',
+    commentContainer: '#F0F2F5',
+    share: '#0866FF',
+    shareActive: '#4A8BFF',
+    shareContainer: '#D6E6FF',
+
+    // WhatsApp brand colors
     whatsappGreen: '#25D366',
-    whatsappTeal: '#128C7E',
+    whatsappDarkGreen: '#128C7E',
+    whatsappTeal: '#075E54',
     whatsappLight: '#DCF8C6',
+    whatsappBlue: '#34B7F1',
 
-    // Instagram-inspired gradient
+    // Facebook brand colors
+    facebookBlue: '#0866FF',
+    facebookDarkBlue: '#0552CC',
+    facebookLight: '#E7F3FF',
+
+    // Instagram gradient colors
     instagramPink: '#E1306C',
     instagramPurple: '#833AB4',
     instagramOrange: '#FD1D1D',
-    instagramYellow: '#FCAF45',
+    instagramYellow: '#F77737',
 
-    // Overlay & scrim colors
+    // Overlay & scrim colors - Apple HCI depth
     scrim: '#000000',
+    scrimLight: 'rgba(0, 0, 0, 0.4)',
+    scrimDark: 'rgba(0, 0, 0, 0.6)',
     overlay: 'rgba(0, 0, 0, 0.5)',
-    overlayLight: 'rgba(0, 0, 0, 0.2)',
+    overlayLight: 'rgba(0, 0, 0, 0.15)',
+    overlayMedium: 'rgba(0, 0, 0, 0.3)',
     overlayDark: 'rgba(0, 0, 0, 0.7)',
 
-    // Elevation tints
-    elevation1: 'rgba(103, 80, 164, 0.05)',
-    elevation2: 'rgba(103, 80, 164, 0.08)',
-    elevation3: 'rgba(103, 80, 164, 0.11)',
+    // State layers - Material 3 interaction states
+    stateHover: 'rgba(0, 0, 0, 0.08)',
+    statePressed: 'rgba(0, 0, 0, 0.12)',
+    stateFocus: 'rgba(0, 0, 0, 0.12)',
+    stateDrag: 'rgba(0, 0, 0, 0.16)',
+
+    // Elevation tints - Material 3 surface tones
+    elevation0: 'transparent',
+    elevation1: 'rgba(0, 168, 132, 0.05)',
+    elevation2: 'rgba(0, 168, 132, 0.08)',
+    elevation3: 'rgba(0, 168, 132, 0.11)',
+    elevation4: 'rgba(0, 168, 132, 0.12)',
+    elevation5: 'rgba(0, 168, 132, 0.14)',
   },
 
   fonts: {
@@ -200,20 +266,26 @@ export const theme = {
     labelSmall: { fontSize: 11, lineHeight: 16, fontWeight: '600' },
   },
 
-  // Gradient presets for modern UI
+  // Gradient presets - Material 3 + Apple inspired
   gradients: {
-    primary: ['#FF6719', '#FF8547'],
-    secondary: ['#7D5260', '#A67C89'],
-    warm: ['#FF6719', '#FCAF45'],
-    cool: ['#006874', '#4F9AA3'],
-    instagram: ['#833AB4', '#E1306C', '#FD1D1D', '#FCAF45'],
-    sunset: ['#FF6719', '#FF8547', '#FCAF45'],
-    ocean: ['#006874', '#00B4D8', '#4F9AA3'],
-    rose: ['#7D5260', '#E1306C', '#FFD9E3'],
-    success: ['#006E26', '#95F7B4'],
-    error: ['#BA1A1A', '#FFDAD6'],
-    dark: ['#1C1B1E', '#49454E'],
-    light: ['#FFFFFF', '#F5F5F5'],
+    primary: ['#00A884', '#26D07C'],
+    secondary: ['#0866FF', '#4A8BFF'],
+    tertiary: ['#FF6B6B', '#FF8E8E'],
+    warm: ['#FFA726', '#FCAF45'],
+    cool: ['#00A884', '#34B7F1'],
+    whatsapp: ['#00A884', '#25D366'],
+    facebook: ['#0866FF', '#4A8BFF'],
+    instagram: ['#833AB4', '#E1306C', '#FD1D1D', '#F77737'],
+    sunset: ['#FF6B6B', '#FFA726', '#FCAF45'],
+    ocean: ['#0866FF', '#34B7F1', '#00A884'],
+    rose: ['#FF6B6B', '#E1306C', '#FFE0E5'],
+    success: ['#00A884', '#26D07C'],
+    error: ['#F02849', '#FF5470'],
+    warning: ['#FFA726', '#FFB951'],
+    info: ['#0866FF', '#4A8BFF'],
+    dark: ['#1A1C1E', '#43474E'],
+    light: ['#FFFFFF', '#F6F6F6'],
+    neutral: ['#8A8D91', '#B0B3B8'],
   },
 
   // Animation timings

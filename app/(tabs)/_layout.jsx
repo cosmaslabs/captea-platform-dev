@@ -1,29 +1,48 @@
 /**
- * Tab Navigation Layout - World-Class Redesign
- * Premium bottom navigation inspired by Instagram, TikTok, and Threads
- * Features: Glassmorphism, smooth animations, haptic feedback
+ * Tab Navigation Layout - Facebook/WhatsApp Premium Design
+ * World-class bottom navigation with filled icons and smooth animations
+ * Features:
+ * - Filled icons for active states (Facebook/WhatsApp style)
+ * - Glassmorphism with border separator
+ * - Smooth scale and color transitions
+ * - Haptic feedback on every interaction
+ * - Material Design 3 + Apple HCI principles
  */
 
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Tabs } from 'expo-router';
+import { useEffect } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import Animated, {
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
 } from 'react-native-reanimated';
-import Icon from '../../assets/icons';
+import Icon from '../../assets/icons/IconEnhanced';
 import { theme } from '../../constants/theme';
-import { HP } from '../../helpers/common';
+import { HP, WP } from '../../helpers/common';
 
-// Animated Tab Icon Component
-const AnimatedTabIcon = ({ name, size, color, focused, fill }) => {
-  const scale = useSharedValue(focused ? 1 : 0.9);
+// Enhanced Animated Tab Icon Component - Facebook/WhatsApp style
+const AnimatedTabIcon = ({ name, size, color, focused, filled }) => {
+  const scale = useSharedValue(focused ? 1 : 0.95);
+  const opacity = useSharedValue(focused ? 1 : 0.7);
+
+  useEffect(() => {
+    if (focused) {
+      scale.value = withSpring(1.05, theme.spring.snappy);
+      opacity.value = withTiming(1, { duration: 200 });
+    } else {
+      scale.value = withSpring(0.95, theme.spring.gentle);
+      opacity.value = withTiming(0.7, { duration: 200 });
+    }
+  }, [focused]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: withSpring(scale.value, { damping: 15 }) }],
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
   }));
 
   return (
@@ -33,7 +52,7 @@ const AnimatedTabIcon = ({ name, size, color, focused, fill }) => {
         size={size}
         color={color}
         strokeWidth={focused ? 2.5 : 2}
-        fill={fill}
+        filled={filled && focused}
       />
     </Animated.View>
   );
@@ -64,13 +83,13 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
+            <View style={styles.iconContainer}>
               <AnimatedTabIcon
                 name="Home"
-                size={26}
-                color={focused ? theme.colors.primary : color}
+                size={24}
+                color={focused ? theme.colors.primary : theme.colors.textSecondary}
                 focused={focused}
-                fill={focused ? theme.colors.primary : 'transparent'}
+                filled={true}
               />
             </View>
           ),
@@ -85,12 +104,13 @@ export default function TabLayout() {
         options={{
           title: 'Messages',
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
+            <View style={styles.iconContainer}>
               <AnimatedTabIcon
                 name="MessageCircle"
-                size={26}
-                color={focused ? theme.colors.primary : color}
+                size={24}
+                color={focused ? theme.colors.primary : theme.colors.textSecondary}
                 focused={focused}
+                filled={true}
               />
             </View>
           ),
@@ -105,19 +125,21 @@ export default function TabLayout() {
         options={{
           title: 'Create',
           tabBarIcon: ({ color, focused }) => (
-            <LinearGradient
-              colors={theme.gradients.primary}
-              style={[styles.createButton, focused && styles.createButtonActive]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <Icon
-                name="Plus"
-                size={28}
-                color={theme.colors.onPrimary}
-                strokeWidth={3}
-              />
-            </LinearGradient>
+            <View style={styles.createButtonContainer}>
+              <LinearGradient
+                colors={theme.gradients.primary}
+                style={[styles.createButton, focused && styles.createButtonFocused]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Icon
+                  name="Plus"
+                  size={26}
+                  color={theme.colors.onPrimary}
+                  strokeWidth={3}
+                />
+              </LinearGradient>
+            </View>
           ),
         }}
         listeners={{
@@ -130,12 +152,13 @@ export default function TabLayout() {
         options={{
           title: 'Notifications',
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
+            <View style={styles.iconContainer}>
               <AnimatedTabIcon
                 name="Bell"
-                size={26}
-                color={focused ? theme.colors.primary : color}
+                size={24}
+                color={focused ? theme.colors.primary : theme.colors.textSecondary}
                 focused={focused}
+                filled={true}
               />
             </View>
           ),
@@ -150,12 +173,13 @@ export default function TabLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
-            <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
+            <View style={styles.iconContainer}>
               <AnimatedTabIcon
                 name="User"
-                size={26}
-                color={focused ? theme.colors.primary : color}
+                size={24}
+                color={focused ? theme.colors.primary : theme.colors.textSecondary}
                 focused={focused}
+                filled={true}
               />
             </View>
           ),
@@ -169,17 +193,19 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  // Tab Bar Container (Glassmorphism)
+  // Tab Bar Container - Facebook/WhatsApp inspired
   tabBar: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
     backgroundColor: 'transparent',
-    borderTopWidth: 0,
+    borderTopWidth: 0.5,
+    borderTopColor: theme.colors.dividerLight,
     height: Platform.OS === 'ios' ? HP(10) : HP(8),
-    paddingBottom: Platform.OS === 'ios' ? HP(2.5) : HP(1),
-    paddingTop: HP(1),
+    paddingBottom: Platform.OS === 'ios' ? HP(2.5) : HP(1.2),
+    paddingTop: HP(1.2),
+    paddingHorizontal: WP(2),
     elevation: 0,
   },
 
@@ -198,25 +224,29 @@ const styles = StyleSheet.create({
   iconContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: HP(5.5),
-    height: HP(5.5),
-    borderRadius: theme.radius.full,
-  },
-  iconContainerActive: {
-    backgroundColor: theme.colors.primaryContainer,
+    width: HP(5),
+    height: HP(5),
+    borderRadius: theme.radius.medium,
   },
 
-  // Create Button (Center)
+  // Create Button Container
+  createButtonContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: HP(0.5),
+  },
+
+  // Create Button - Prominent gradient button
   createButton: {
-    width: HP(6.5),
-    height: HP(6.5),
+    width: HP(6),
+    height: HP(6),
     borderRadius: theme.radius.full,
     justifyContent: 'center',
     alignItems: 'center',
-    ...theme.shadows.level4,
+    ...theme.shadows.level3,
   },
-  createButtonActive: {
-    transform: [{ scale: 1.08 }],
-    ...theme.shadows.level5,
+  createButtonFocused: {
+    transform: [{ scale: 1.05 }],
+    ...theme.shadows.level4,
   },
 });
